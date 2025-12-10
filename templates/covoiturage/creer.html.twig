@@ -1,0 +1,130 @@
+{# templates/covoiturage/creer.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Proposer un covoiturage - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 text-dark-green mb-0">
+                            <i class="bi bi-plus-circle me-2"></i>Proposer un covoiturage
+                        </h1>
+                        <a href="{{ path('app_espace_utilisateur') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Retour
+                        </a>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            {# Rappel des frais de plateforme #}
+                            <div class="alert alert-info mb-4">
+                                <div class="d-flex">
+                                    <i class="bi bi-info-circle me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Bon à savoir :</strong>
+                                        <p class="mb-0 small">
+                                            Pour chaque passager, 2 crédits seront prélevés par EcoRide pour garantir le bon fonctionnement de la plateforme. 
+                                            Le reste vous sera crédité à la fin du trajet.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ form_start(form, {'attr': {'class': 'covoiturage-form', 'novalidate': 'novalidate'}}) }}
+                                
+                                {# Itinéraire #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-geo-alt me-2"></i>Itinéraire
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.ville_depart) }}
+                                        {{ form_widget(form.ville_depart) }}
+                                        {{ form_errors(form.ville_depart) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.ville_arrivee) }}
+                                        {{ form_widget(form.ville_arrivee) }}
+                                        {{ form_errors(form.ville_arrivee) }}
+                                    </div>
+                                </div>
+
+                                {# Date et heure #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-calendar-event me-2"></i>Date et heure
+                                </h5>
+                                <div class="mb-4">
+                                    {{ form_label(form.date_depart) }}
+                                    {{ form_widget(form.date_depart) }}
+                                    {{ form_errors(form.date_depart) }}
+                                </div>
+
+                                {# Prix et places #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-cash-coin me-2"></i>Prix et places
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.prix) }}
+                                        <div class="input-group">
+                                            {{ form_widget(form.prix) }}
+                                            <span class="input-group-text">crédits</span>
+                                        </div>
+                                        {{ form_errors(form.prix) }}
+                                        <div class="form-text">
+                                            {{ form_help(form.prix) }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.places_restantes) }}
+                                        {{ form_widget(form.places_restantes) }}
+                                        {{ form_errors(form.places_restantes) }}
+                                    </div>
+                                </div>
+
+                                {# Véhicule #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-car-front me-2"></i>Véhicule
+                                </h5>
+                                <div class="mb-4">
+                                    {{ form_label(form.vehicule_id) }}
+                                    {{ form_widget(form.vehicule_id) }}
+                                    {{ form_errors(form.vehicule_id) }}
+                                    <div class="form-text">
+                                        <a href="{{ path('app_espace_utilisateur', {'_fragment': 'vehicules'}) }}" class="text-dark-green">
+                                            <i class="bi bi-plus-circle me-1"></i>Ajouter un nouveau véhicule
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {# Récapitulatif #}
+                                <div class="bg-light-green rounded p-3 mb-4">
+                                    <h6 class="text-dark-green mb-2">
+                                        <i class="bi bi-calculator me-2"></i>Récapitulatif
+                                    </h6>
+                                    <p class="small mb-0">
+                                        Pour un prix de <strong id="prixAffiche">0</strong> crédits par passager :
+                                    </p>
+                                    <ul class="small mb-0 mt-1">
+                                        <li>EcoRide prélève : <strong>2 crédits</strong></li>
+                                        <li>Vous recevrez : <strong id="prixChauffeur">0</strong> crédits par passager</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-grid">
+                                    {{ form_widget(form.submit) }}
+                                </div>
+
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+

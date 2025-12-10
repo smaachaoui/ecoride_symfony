@@ -16,28 +16,52 @@ class AvisRepository extends ServiceEntityRepository
         parent::__construct($registry, Avis::class);
     }
 
-    //    /**
-    //     * @return Avis[] Returns an array of Avis objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('a.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Compte les avis validés aujourd'hui
+     */
+    public function countAvisValidesAujourdHui(): int
+    {
+        $today = new \DateTime('today');
+        $tomorrow = new \DateTime('tomorrow');
 
-    //    public function findOneBySomeField($value): ?Avis
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        return $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->andWhere('a.statut = :statut')
+            ->andWhere('a.created_at >= :today')
+            ->andWhere('a.created_at < :tomorrow')
+            ->setParameter('statut', Avis::STATUT_VALIDE)
+            ->setParameter('today', $today)
+            ->setParameter('tomorrow', $tomorrow)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Trouve les avis traités récemment
+     */
+    public function findAvisTraitesRecents(int $limit = 20): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.statut != :statut')
+            ->setParameter('statut', Avis::STATUT_EN_ATTENTE)
+            ->orderBy('a.created_at', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les avis validés d'un covoiturage
+     */
+    public function findAvisValidesByCovoiturage(int $covoiturageId): array
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.covoiturage_id = :covoiturageId')
+            ->andWhere('a.statut = :statut')
+            ->setParameter('covoiturageId', $covoiturageId)
+            ->setParameter('statut', Avis::STATUT_VALIDE)
+            ->orderBy('a.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

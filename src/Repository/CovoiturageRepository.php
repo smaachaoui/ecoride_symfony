@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Covoiturage;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -120,5 +121,103 @@ class CovoiturageRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return $result ? round((float) $result, 1) : null;
+    }
+
+    public function findCovoituragesPasses(Utilisateur $utilisateur): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.utilisateur_id = :utilisateur')
+            ->andWhere('c.date_depart < :now')
+            ->setParameter('utilisateur', $utilisateur)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('c.date_depart', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve les covoiturages d'une journée
+    */
+    public function findCovoituragesDuJour(\DateTime $dateDebut, \DateTime $dateFin): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.date_depart >= :dateDebut')
+            ->andWhere('c.date_depart < :dateFin')
+            ->setParameter('dateDebut', $dateDebut)
+            ->setParameter('dateFin', $dateFin)
+            ->orderBy('c.date_depart', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+    * Compte les covoiturages du mois en cours
+     */
+    public function countCovoituragesCeMois(): int
+    {
+        $debut = new \DateTime('first day of this month midnight');
+        $fin = new \DateTime('last day of this month 23:59:59');
+
+        return $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->andWhere('c.date_depart >= :debut')
+            ->andWhere('c.date_depart <= :fin')
+            ->setParameter('debut', $debut)
+            ->setParameter('fin', $fin)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Statistiques par mois
+     */
+    public function getStatistiquesParMois(int $nbMois = 6): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT 
+                DATE_FORMAT(date_depart, '%Y-%m') as mois,
+                COUNT(*) as nb_covoiturages,
+                SUM(GREATEST(0, (SELECT COUNT(*) FROM participation p WHERE p.covoiturage_id_id = c.id))) as nb_participations
+            FROM covoiturage c
+            WHERE date_depart >= DATE_SUB(NOW(), INTERVAL :nbMois MONTH)
+            GROUP BY DATE_FORMAT(date_depart, '%Y-%m')
+            ORDER BY mois ASC
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['nbMois' => $nbMois]);
+
+        return $result->fetchAllAssociative();
+    }
+
+    /**
+     * Top chauffeurs
+     */
+    public function getTopChauffeurs(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select('u.pseudo, u.photo, COUNT(c.id) as nb_trajets')
+            ->join('c.utilisateur_id', 'u')
+            ->groupBy('u.id')
+            ->orderBy('nb_trajets', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trajets les plus populaires
+     */
+    public function getTrajetsPopulaires(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select('c.ville_depart, c.ville_arrivee, COUNT(c.id) as nb_trajets')
+            ->groupBy('c.ville_depart, c.ville_arrivee')
+            ->orderBy('nb_trajets', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 }

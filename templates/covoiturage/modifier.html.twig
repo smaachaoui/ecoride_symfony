@@ -1,0 +1,104 @@
+{# templates/covoiturage/modifier.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le covoiturage - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="h3 text-dark-green mb-0">
+                            <i class="bi bi-pencil me-2"></i>Modifier le covoiturage
+                        </h1>
+                        <a href="{{ path('app_covoiturage_detail', {'id': covoiturage.id}) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Retour
+                        </a>
+                    </div>
+
+                    {# Infos du trajet actuel #}
+                    <div class="alert alert-secondary mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>
+                                Trajet : <strong>{{ covoiturage.villeDepart }} → {{ covoiturage.villeArrivee }}</strong>
+                                | {{ covoiturage.dateDepart|date('d/m/Y à H:i') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            {{ form_start(form, {'attr': {'class': 'covoiturage-form', 'novalidate': 'novalidate'}}) }}
+                                
+                                {# Itinéraire #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-geo-alt me-2"></i>Itinéraire
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.ville_depart) }}
+                                        {{ form_widget(form.ville_depart) }}
+                                        {{ form_errors(form.ville_depart) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.ville_arrivee) }}
+                                        {{ form_widget(form.ville_arrivee) }}
+                                        {{ form_errors(form.ville_arrivee) }}
+                                    </div>
+                                </div>
+
+                                {# Date et heure #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-calendar-event me-2"></i>Date et heure
+                                </h5>
+                                <div class="mb-4">
+                                    {{ form_label(form.date_depart) }}
+                                    {{ form_widget(form.date_depart) }}
+                                    {{ form_errors(form.date_depart) }}
+                                </div>
+
+                                {# Prix et places #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-cash-coin me-2"></i>Prix et places
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.prix) }}
+                                        <div class="input-group">
+                                            {{ form_widget(form.prix) }}
+                                            <span class="input-group-text">crédits</span>
+                                        </div>
+                                        {{ form_errors(form.prix) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.places_restantes) }}
+                                        {{ form_widget(form.places_restantes) }}
+                                        {{ form_errors(form.places_restantes) }}
+                                    </div>
+                                </div>
+
+                                {# Véhicule #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-car-front me-2"></i>Véhicule
+                                </h5>
+                                <div class="mb-4">
+                                    {{ form_label(form.vehicule_id) }}
+                                    {{ form_widget(form.vehicule_id) }}
+                                    {{ form_errors(form.vehicule_id) }}
+                                </div>
+
+                                <div class="d-grid">
+                                    {{ form_widget(form.submit, {'label': 'Enregistrer les modifications'}) }}
+                                </div>
+
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
