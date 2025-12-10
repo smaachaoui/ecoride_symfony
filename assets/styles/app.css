@@ -121,11 +121,10 @@ body {
 /* ============================================
    Hero Section
    ============================================ */
-
 .hero-section {
-    background: linear-gradient(rgba(17, 75, 30, 0.8), rgba(17, 75, 30, 0.8));
-    min-height: 350px;
+    min-height: 80vh;
 }
+
 
 /* ============================================
    Feature Icons
