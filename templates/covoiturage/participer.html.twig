@@ -1,0 +1,97 @@
+{# templates/covoiturage/participer.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Confirmer la participation - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <div class="bg-light-green rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                     style="width: 80px; height: 80px;">
+                                    <i class="bi bi-car-front text-dark-green" style="font-size: 2rem;"></i>
+                                </div>
+                                <h1 class="h3 text-dark-green">Confirmer votre participation</h1>
+                            </div>
+
+                            {# Récapitulatif du trajet #}
+                            <div class="bg-light rounded p-4 mb-4">
+                                <h2 class="h5 mb-3">
+                                    {{ covoiturage.villeDepart }}
+                                    <i class="bi bi-arrow-right mx-2"></i>
+                                    {{ covoiturage.villeArrivee }}
+                                </h2>
+                                
+                                <div class="row g-2 small">
+                                    <div class="col-6">
+                                        <i class="bi bi-calendar me-1 text-muted"></i>
+                                        {{ covoiturage.dateDepart|date('d/m/Y') }}
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-clock me-1 text-muted"></i>
+                                        {{ covoiturage.dateDepart|date('H:i') }}
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-person me-1 text-muted"></i>
+                                        Chauffeur : {{ covoiturage.utilisateurId.pseudo }}
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="bi bi-car-front me-1 text-muted"></i>
+                                        {{ covoiturage.vehiculeId.marque }} {{ covoiturage.vehiculeId.modele }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# Détails du paiement #}
+                            <div class="border rounded p-4 mb-4">
+                                <h3 class="h6 text-muted mb-3">Détails du paiement</h3>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Prix du trajet</span>
+                                    <strong>{{ covoiturage.prix|number_format(0, ',', ' ') }} crédits</strong>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Votre solde actuel</span>
+                                    <span>{{ app.user.credits }} crédits</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between text-dark-green">
+                                    <strong>Solde après participation</strong>
+                                    <strong>{{ app.user.credits - covoiturage.prix }} crédits</strong>
+                                </div>
+                            </div>
+
+                            {# Avertissement #}
+                            <div class="alert alert-warning mb-4">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Attention :</strong> En confirmant, {{ covoiturage.prix|number_format(0, ',', ' ') }} crédits seront débités de votre compte.
+                            </div>
+
+                            {# Boutons d'action #}
+                            <form action="{{ path('app_covoiturage_confirmer', {'id': covoiturage.id}) }}" method="POST">
+                                <input type="hidden" name="_token" value="{{ csrf_token('participer_' ~ covoiturage.id) }}">
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-check-circle me-2"></i>Confirmer ma participation
+                                    </button>
+                                    <a href="{{ path('app_covoiturage_detail', {'id': covoiturage.id}) }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-left me-2"></i>Annuler
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

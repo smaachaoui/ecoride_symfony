@@ -3,12 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\Covoiturage;
+use App\Entity\Participation;
+use App\Form\CreerCovoiturageType;
 use App\Form\RechercheCovoiturageType;
 use App\Repository\CovoiturageRepository;
+use App\Repository\ParticipationRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class CovoiturageController extends AbstractController
 {
@@ -79,10 +84,219 @@ class CovoiturageController extends AbstractController
     }
 
     #[Route('/covoiturage/{id}', name: 'app_covoiturage_detail', requirements: ['id' => '\d+'])]
-    public function detail(Covoiturage $covoiturage): Response
+    public function detail(Covoiturage $covoiturage, ParticipationRepository $participationRepository): Response
     {
+        // Vérifier si l'utilisateur participe déjà
+        $dejaParticipant = false;
+        $estChauffeur = false;
+        
+        if ($this->getUser()) {
+            $dejaParticipant = $participationRepository->findOneBy([
+                'utilisateur_id' => $this->getUser(),
+                'covoiturage_id' => $covoiturage,
+            ]) !== null;
+            
+            $estChauffeur = $covoiturage->getUtilisateurId() === $this->getUser();
+        }
+
         return $this->render('covoiturage/detail.html.twig', [
             'covoiturage' => $covoiturage,
+            'dejaParticipant' => $dejaParticipant,
+            'estChauffeur' => $estChauffeur,
         ]);
+    }
+
+    #[Route('/covoiturage/creer', name: 'app_covoiturage_creer')]
+    #[IsGranted('ROLE_USER')]
+    public function creer(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+
+        // Vérifier que l'utilisateur est chauffeur
+        if (!$user->isChauffeur()) {
+            $this->addFlash('warning', 'Vous devez être chauffeur pour proposer un covoiturage.');
+            return $this->redirectToRoute('app_espace_utilisateur');
+        }
+
+        // Vérifier que l'utilisateur a au moins un véhicule
+        if ($user->getVehicules()->isEmpty()) {
+            $this->addFlash('warning', 'Vous devez ajouter un véhicule avant de proposer un covoiturage.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'vehicules']);
+        }
+
+        $covoiturage = new Covoiturage();
+        $form = $this->createForm(CreerCovoiturageType::class, $covoiturage);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Associer le chauffeur
+            $covoiturage->setUtilisateurId($user);
+
+            // Déterminer si le voyage est écologique (véhicule électrique)
+            $vehicule = $covoiturage->getVehiculeId();
+            $covoiturage->setEcologique($vehicule->getEnergie() === 'Electrique');
+
+            $entityManager->persist($covoiturage);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Votre covoiturage a été publié avec succès !');
+
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        return $this->render('covoiturage/creer.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/covoiturage/{id}/modifier', name: 'app_covoiturage_modifier', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
+    public function modifier(Covoiturage $covoiturage, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+
+        // Vérifier que l'utilisateur est le chauffeur de ce covoiturage
+        if ($covoiturage->getUtilisateurId() !== $user) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier ce covoiturage.');
+        }
+
+        // Vérifier que le covoiturage n'a pas encore commencé
+        if ($covoiturage->getDateDepart() < new \DateTime()) {
+            $this->addFlash('danger', 'Vous ne pouvez pas modifier un covoiturage déjà passé.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        $form = $this->createForm(CreerCovoiturageType::class, $covoiturage);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Mettre à jour le statut écologique
+            $vehicule = $covoiturage->getVehiculeId();
+            $covoiturage->setEcologique($vehicule->getEnergie() === 'Electrique');
+
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Votre covoiturage a été modifié.');
+
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        return $this->render('covoiturage/modifier.html.twig', [
+            'form' => $form->createView(),
+            'covoiturage' => $covoiturage,
+        ]);
+    }
+
+    #[Route('/covoiturage/{id}/participer', name: 'app_covoiturage_participer', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
+    public function participer(
+        Covoiturage $covoiturage,
+        ParticipationRepository $participationRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $this->getUser();
+
+        // Vérification : l'utilisateur n'est pas le chauffeur
+        if ($covoiturage->getUtilisateurId() === $user) {
+            $this->addFlash('danger', 'Vous ne pouvez pas participer à votre propre covoiturage.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Vérification : l'utilisateur ne participe pas déjà
+        $participationExistante = $participationRepository->findOneBy([
+            'utilisateur_id' => $user,
+            'covoiturage_id' => $covoiturage,
+        ]);
+
+        if ($participationExistante) {
+            $this->addFlash('warning', 'Vous participez déjà à ce covoiturage.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Vérification : places disponibles
+        if ($covoiturage->getPlacesRestantes() <= 0) {
+            $this->addFlash('danger', 'Désolé, ce covoiturage est complet.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Vérification : crédits suffisants
+        $prixCovoiturage = (int) $covoiturage->getPrix();
+        if ($user->getCredits() < $prixCovoiturage) {
+            $this->addFlash('danger', 'Vous n\'avez pas assez de crédits pour participer à ce covoiturage. (Requis : ' . $prixCovoiturage . ' crédits, Disponible : ' . $user->getCredits() . ' crédits)');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Afficher la page de confirmation
+        return $this->render('covoiturage/participer.html.twig', [
+            'covoiturage' => $covoiturage,
+        ]);
+    }
+
+    #[Route('/covoiturage/{id}/confirmer-participation', name: 'app_covoiturage_confirmer', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function confirmerParticipation(
+        Request $request,
+        Covoiturage $covoiturage,
+        ParticipationRepository $participationRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $this->getUser();
+
+        // Vérification CSRF
+        if (!$this->isCsrfTokenValid('participer_' . $covoiturage->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide. Veuillez réessayer.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Double vérification : l'utilisateur n'est pas le chauffeur
+        if ($covoiturage->getUtilisateurId() === $user) {
+            $this->addFlash('danger', 'Vous ne pouvez pas participer à votre propre covoiturage.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Double vérification : pas de participation existante
+        $participationExistante = $participationRepository->findOneBy([
+            'utilisateur_id' => $user,
+            'covoiturage_id' => $covoiturage,
+        ]);
+
+        if ($participationExistante) {
+            $this->addFlash('warning', 'Vous participez déjà à ce covoiturage.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Double vérification : places disponibles
+        if ($covoiturage->getPlacesRestantes() <= 0) {
+            $this->addFlash('danger', 'Désolé, ce covoiturage est maintenant complet.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Double vérification : crédits suffisants
+        $prixCovoiturage = (int) $covoiturage->getPrix();
+        if ($user->getCredits() < $prixCovoiturage) {
+            $this->addFlash('danger', 'Vous n\'avez pas assez de crédits.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Créer la participation
+        $participation = new Participation();
+        $participation->setUtilisateurId($user);
+        $participation->setCovoiturageId($covoiturage);
+        $participation->setConfirme(true);
+        $participation->setCreditsUtilises($prixCovoiturage);
+
+        // Mettre à jour les crédits de l'utilisateur
+        $user->setCredits($user->getCredits() - $prixCovoiturage);
+
+        // Mettre à jour les places restantes
+        $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() - 1);
+
+        // Persister les changements
+        $entityManager->persist($participation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre participation a été confirmée ! ' . $prixCovoiturage . ' crédits ont été débités de votre compte.');
+
+        return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
     }
 }

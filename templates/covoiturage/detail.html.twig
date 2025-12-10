@@ -217,16 +217,55 @@
                             <p class="h4 text-dark-green mb-1">{{ covoiturage.prix|number_format(0, ',', ' ') }} crédits</p>
                             <p class="text-muted small mb-4">par personne</p>
 
-                            {% if covoiturage.placesRestantes > 0 %}
-                                <a href="{{ path('app_covoiturage_participer', {'id': covoiturage.id}) }}" 
-                                   class="btn btn-primary btn-lg w-100">
-                                    <i class="bi bi-check-circle me-2"></i>Participer
-                                </a>
+                            {% if estChauffeur %}
+                                {# L'utilisateur est le chauffeur #}
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Vous êtes le chauffeur de ce trajet
+                                </div>
+
+                            {% elseif dejaParticipant %}
+                                {# L'utilisateur participe déjà #}
+                                <div class="alert alert-success mb-0">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Vous participez à ce covoiturage
+                                </div>
+
+                            {% elseif covoiturage.placesRestantes > 0 %}
+                                {# Places disponibles #}
+                                {% if app.user %}
+                                    {% if app.user.credits >= covoiturage.prix %}
+                                        <a href="{{ path('app_covoiturage_participer', {'id': covoiturage.id}) }}" 
+                                        class="btn btn-primary btn-lg w-100">
+                                            <i class="bi bi-check-circle me-2"></i>Participer
+                                        </a>
+                                        <p class="text-muted small mt-2 mb-0">
+                                            <i class="bi bi-wallet me-1"></i>
+                                            Votre solde : {{ app.user.credits }} crédits
+                                        </p>
+                                    {% else %}
+                                        <button class="btn btn-secondary btn-lg w-100" disabled>
+                                            <i class="bi bi-wallet2 me-2"></i>Crédits insuffisants
+                                        </button>
+                                        <p class="text-danger small mt-2 mb-0">
+                                            <i class="bi bi-exclamation-circle me-1"></i>
+                                            Votre solde : {{ app.user.credits }} crédits
+                                        </p>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{{ path('app_login', {'redirect': path('app_covoiturage_detail', {'id': covoiturage.id})}) }}" 
+                                    class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Connectez-vous pour participer
+                                    </a>
+                                {% endif %}
+                                
                                 <p class="text-muted small mt-2 mb-0">
                                     <i class="bi bi-info-circle me-1"></i>
                                     {{ covoiturage.placesRestantes }} place{{ covoiturage.placesRestantes > 1 ? 's' : '' }} restante{{ covoiturage.placesRestantes > 1 ? 's' : '' }}
                                 </p>
+
                             {% else %}
+                                {# Complet #}
                                 <button class="btn btn-secondary btn-lg w-100" disabled>
                                     <i class="bi bi-x-circle me-2"></i>Complet
                                 </button>
