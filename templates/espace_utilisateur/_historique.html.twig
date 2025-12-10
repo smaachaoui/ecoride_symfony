@@ -1,0 +1,302 @@
+{# templates/espace_utilisateur/_historique.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-clock-history me-2"></i>Historique
+    </h1>
+</div>
+
+{# Navigation sous-onglets #}
+<ul class="nav nav-pills mb-4" id="historiqueTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="passager-tab" data-bs-toggle="pill" 
+                data-bs-target="#passager" type="button" role="tab">
+            <i class="bi bi-person me-1"></i>En tant que passager
+            {% if participationsPassees|length > 0 %}
+                <span class="badge bg-white text-dark-green ms-1">{{ participationsPassees|length }}</span>
+            {% endif %}
+        </button>
+    </li>
+    {% if app.user.isChauffeur %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="chauffeur-tab" data-bs-toggle="pill" 
+                    data-bs-target="#chauffeur" type="button" role="tab">
+                <i class="bi bi-car-front me-1"></i>En tant que chauffeur
+                {% if covoituragesPasses|length > 0 %}
+                    <span class="badge bg-white text-dark-green ms-1">{{ covoituragesPasses|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content" id="historiqueTabContent">
+    {# Historique en tant que passager #}
+    <div class="tab-pane fade show active" id="passager" role="tabpanel">
+        {% if participationsPassees|length > 0 %}
+            <div class="row g-4">
+                {% for participation in participationsPassees %}
+                    {% set covoit = participation.covoiturageId %}
+                    {% set chauffeur = covoit.utilisateurId %}
+                    {% set dejaNote = covoit.id in covoituragesNotes %}
+                    
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    {# Infos trajet #}
+                                    <div class="col-lg-5 mb-3 mb-lg-0">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h5 class="mb-0">
+                                                {{ covoit.villeDepart }}
+                                                <i class="bi bi-arrow-right mx-2 text-medium-green"></i>
+                                                {{ covoit.villeArrivee }}
+                                            </h5>
+                                            {% if covoit.ecologique %}
+                                                <span class="badge bg-success ms-2">
+                                                    <i class="bi bi-lightning-charge me-1"></i>Éco
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-muted mb-0 small">
+                                            <i class="bi bi-calendar me-1"></i>{{ covoit.dateDepart|date('d/m/Y') }}
+                                            <i class="bi bi-clock ms-2 me-1"></i>{{ covoit.dateDepart|date('H:i') }}
+                                        </p>
+                                    </div>
+
+                                    {# Infos chauffeur #}
+                                    <div class="col-lg-3 mb-3 mb-lg-0">
+                                        <div class="d-flex align-items-center">
+                                            {% if chauffeur.photo %}
+                                                <img src="{{ asset('uploads/photos/' ~ chauffeur.photo) }}" 
+                                                     alt="{{ chauffeur.pseudo }}" 
+                                                     class="rounded-circle me-2"
+                                                     width="40" height="40"
+                                                     style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person text-dark-green"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <p class="mb-0 small text-muted">Chauffeur</p>
+                                                <p class="mb-0 fw-medium">{{ chauffeur.pseudo }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {# Crédits et actions #}
+                                    <div class="col-lg-4">
+                                        <div class="d-flex align-items-center justify-content-lg-end gap-3">
+                                            <div class="text-end">
+                                                <p class="mb-0 small text-muted">Crédits utilisés</p>
+                                                <p class="mb-0 fw-bold text-dark-green">
+                                                    <i class="bi bi-coin me-1"></i>{{ participation.creditsUtilises }}
+                                                </p>
+                                            </div>
+                                            
+                                            {% if dejaNote %}
+                                                <span class="badge bg-success py-2 px-3">
+                                                    <i class="bi bi-check-circle me-1"></i>Noté
+                                                </span>
+                                            {% else %}
+                                                <button type="button" 
+                                                        class="btn btn-primary btn-sm"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalAvis{{ covoit.id }}">
+                                                    <i class="bi bi-star me-1"></i>Laisser un avis
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Modal Avis #}
+                    {% if not dejaNote %}
+                        <div class="modal fade" id="modalAvis{{ covoit.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header border-0">
+                                        <h5 class="modal-title text-dark-green">
+                                            <i class="bi bi-star me-2"></i>Laisser un avis
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                    </div>
+                                    <form action="{{ path('app_espace_avis', {'id': covoit.id}) }}" method="POST">
+                                        <div class="modal-body">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('avis_' ~ covoit.id) }}">
+                                            
+                                            {# Récap du trajet #}
+                                            <div class="bg-light rounded p-3 mb-4">
+                                                <p class="mb-1 fw-medium">
+                                                    {{ covoit.villeDepart }} → {{ covoit.villeArrivee }}
+                                                </p>
+                                                <p class="mb-0 small text-muted">
+                                                    {{ covoit.dateDepart|date('d/m/Y') }} - Chauffeur : {{ chauffeur.pseudo }}
+                                                </p>
+                                            </div>
+
+                                            {# Note #}
+                                            <div class="mb-4">
+                                                <label class="form-label fw-medium">Votre note</label>
+                                                <div class="rating-input d-flex gap-2">
+                                                    {% for i in 1..5 %}
+                                                        <div class="form-check form-check-inline m-0">
+                                                            <input class="form-check-input visually-hidden rating-star" 
+                                                                   type="radio" 
+                                                                   name="note" 
+                                                                   id="note{{ covoit.id }}_{{ i }}" 
+                                                                   value="{{ i }}"
+                                                                   required>
+                                                            <label class="form-check-label fs-3 rating-label" 
+                                                                   for="note{{ covoit.id }}_{{ i }}"
+                                                                   style="cursor: pointer;">
+                                                                <i class="bi bi-star"></i>
+                                                            </label>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+                                            {# Commentaire #}
+                                            <div class="mb-3">
+                                                <label for="commentaire{{ covoit.id }}" class="form-label fw-medium">
+                                                    Votre commentaire <span class="text-muted fw-normal">(optionnel)</span>
+                                                </label>
+                                                <textarea class="form-control" 
+                                                          id="commentaire{{ covoit.id }}" 
+                                                          name="commentaire" 
+                                                          rows="3"
+                                                          placeholder="Partagez votre expérience..."></textarea>
+                                            </div>
+
+                                            <div class="alert alert-info small mb-0">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Votre avis sera vérifié par notre équipe avant d'être publié.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                                            <button type="submit" class="btn btn-primary">Publier mon avis</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-dark-green">Aucun trajet effectué</h5>
+                    <p class="text-muted">Vous n'avez pas encore participé à un covoiturage.</p>
+                    <a href="{{ path('app_covoiturages') }}" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Rechercher un covoiturage
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Historique en tant que chauffeur #}
+    {% if app.user.isChauffeur %}
+        <div class="tab-pane fade" id="chauffeur" role="tabpanel">
+            {% if covoituragesPasses|length > 0 %}
+                <div class="row g-4">
+                    {% for covoit in covoituragesPasses %}
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-4">
+                                    <div class="row align-items-center">
+                                        {# Infos trajet #}
+                                        <div class="col-lg-5 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h5 class="mb-0">
+                                                    {{ covoit.villeDepart }}
+                                                    <i class="bi bi-arrow-right mx-2 text-medium-green"></i>
+                                                    {{ covoit.villeArrivee }}
+                                                </h5>
+                                                {% if covoit.ecologique %}
+                                                    <span class="badge bg-success ms-2">
+                                                        <i class="bi bi-lightning-charge me-1"></i>Éco
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <p class="text-muted mb-0 small">
+                                                <i class="bi bi-calendar me-1"></i>{{ covoit.dateDepart|date('d/m/Y') }}
+                                                <i class="bi bi-clock ms-2 me-1"></i>{{ covoit.dateDepart|date('H:i') }}
+                                            </p>
+                                        </div>
+
+                                        {# Infos passagers #}
+                                        <div class="col-lg-3 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-people text-dark-green"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0 small text-muted">Passagers</p>
+                                                    <p class="mb-0 fw-medium">{{ covoit.participations|length }} personne(s)</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {# Gains et détails #}
+                                        <div class="col-lg-4">
+                                            <div class="d-flex align-items-center justify-content-lg-end gap-3">
+                                                <div class="text-end">
+                                                    <p class="mb-0 small text-muted">Crédits gagnés</p>
+                                                    {% set gainsTotal = (covoit.prix - 2) * covoit.participations|length %}
+                                                    <p class="mb-0 fw-bold text-dark-green">
+                                                        <i class="bi bi-coin me-1"></i>{{ gainsTotal > 0 ? gainsTotal : 0 }}
+                                                    </p>
+                                                </div>
+                                                
+                                                <a href="{{ path('app_covoiturage_detail', {'id': covoit.id}) }}" 
+                                                   class="btn btn-outline-success btn-sm">
+                                                    <i class="bi bi-eye me-1"></i>Détail
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {# Liste des passagers si présents #}
+                                    {% if covoit.participations|length > 0 %}
+                                        <hr class="my-3">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="small text-muted me-2">Passagers :</span>
+                                            {% for participation in covoit.participations %}
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="bi bi-person me-1"></i>
+                                                    {{ participation.utilisateurId.pseudo }}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-dark-green">Aucun trajet effectué</h5>
+                        <p class="text-muted">Vous n'avez pas encore proposé de covoiturage terminé.</p>
+                        <a href="{{ path('app_covoiturage_creer') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Proposer un trajet
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

@@ -1,0 +1,254 @@
+{# templates/espace_utilisateur/_info.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-person me-2"></i>Informations personnelles
+    </h1>
+</div>
+
+{# Photo et infos de base #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                {% if app.user.photo %}
+                    <img src="{{ asset('uploads/photos/' ~ app.user.photo) }}" 
+                         alt="{{ app.user.pseudo }}" 
+                         class="rounded-circle"
+                         width="100" height="100"
+                         style="object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center" 
+                         style="width: 100px; height: 100px;">
+                        <i class="bi bi-person text-dark-green" style="font-size: 2.5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col">
+                <h4 class="mb-1">{{ app.user.pseudo }}</h4>
+                <p class="text-muted mb-2">{{ app.user.email }}</p>
+                <span class="badge bg-dark-green">
+                    {% if app.user.role == 'CHAUFFEUR_PASSAGER' %}
+                        Chauffeur & Passager
+                    {% elseif app.user.role == 'CHAUFFEUR' %}
+                        Chauffeur
+                    {% else %}
+                        Passager
+                    {% endif %}
+                </span>
+            </div>
+            <div class="col-auto">
+                <button type="button" 
+                        class="btn btn-outline-success" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalEditProfil">
+                    <i class="bi bi-pencil me-1"></i>Modifier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Statistiques #}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-4">
+                <div class="bg-light-green rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                     style="width: 50px; height: 50px;">
+                    <i class="bi bi-coin text-dark-green"></i>
+                </div>
+                <h3 class="h2 text-dark-green mb-0">{{ app.user.credits }}</h3>
+                <p class="text-muted small mb-0">Crédits disponibles</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-4">
+                <div class="bg-light-green rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                     style="width: 50px; height: 50px;">
+                    <i class="bi bi-car-front text-dark-green"></i>
+                </div>
+                <h3 class="h2 text-dark-green mb-0">{{ app.user.vehicules|length }}</h3>
+                <p class="text-muted small mb-0">Véhicule(s)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-4">
+                <div class="bg-light-green rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                     style="width: 50px; height: 50px;">
+                    <i class="bi bi-calendar-check text-dark-green"></i>
+                </div>
+                <h3 class="h2 text-dark-green mb-0">{{ app.user.participations|length }}</h3>
+                <p class="text-muted small mb-0">Trajet(s) effectué(s)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Informations du compte #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3 px-4">
+        <h2 class="h5 text-dark-green mb-0">
+            <i class="bi bi-info-circle me-2"></i>Informations du compte
+        </h2>
+    </div>
+    <div class="card-body p-4">
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <small class="text-muted d-block">Date d'inscription</small>
+                <strong>{{ app.user.createdAt|date('d/m/Y') }}</strong>
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted d-block">Statut du compte</small>
+                {% if app.user.isSuspended %}
+                    <span class="badge bg-danger">Suspendu</span>
+                {% else %}
+                    <span class="badge bg-success">Actif</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Changer de rôle #}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3 px-4">
+        <h2 class="h5 text-dark-green mb-0">
+            <i class="bi bi-toggles me-2"></i>Mon rôle sur EcoRide
+        </h2>
+    </div>
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <p class="mb-1">Vous êtes actuellement :</p>
+                <span class="badge bg-dark-green fs-6">
+                    {% if app.user.role == 'CHAUFFEUR_PASSAGER' %}
+                        <i class="bi bi-people me-1"></i>Chauffeur & Passager
+                    {% elseif app.user.role == 'CHAUFFEUR' %}
+                        <i class="bi bi-car-front me-1"></i>Chauffeur
+                    {% else %}
+                        <i class="bi bi-person me-1"></i>Passager
+                    {% endif %}
+                </span>
+            </div>
+            <button type="button" 
+                    class="btn btn-outline-dark" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalEditRole">
+                <i class="bi bi-pencil me-1"></i>Modifier
+            </button>
+        </div>
+    </div>
+</div>
+
+{# Modal Modifier Profil #}
+<div class="modal fade" id="modalEditProfil" tabindex="-1" aria-labelledby="modalEditProfilLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-dark-green" id="modalEditProfilLabel">
+                    <i class="bi bi-pencil me-2"></i>Modifier mon profil
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form action="{{ path('app_espace_profil_update') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="_token" value="{{ csrf_token('update_profil') }}">
+                    
+                    <div class="text-center mb-4">
+                        {% if app.user.photo %}
+                            <img src="{{ asset('uploads/photos/' ~ app.user.photo) }}" 
+                                 alt="{{ app.user.pseudo }}" 
+                                 class="rounded-circle mb-2"
+                                 width="80" height="80"
+                                 style="object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center mx-auto mb-2" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="bi bi-person text-dark-green" style="font-size: 2rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pseudo" class="form-label">Pseudo</label>
+                        <input type="text" class="form-control" id="pseudo" name="pseudo" 
+                               value="{{ app.user.pseudo }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="{{ app.user.email }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Photo de profil</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        <div class="form-text">Formats : JPEG, PNG, GIF, WEBP. Max : 2 Mo</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# Modal Modifier Rôle #}
+<div class="modal fade" id="modalEditRole" tabindex="-1" aria-labelledby="modalEditRoleLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-dark-green" id="modalEditRoleLabel">
+                    <i class="bi bi-toggles me-2"></i>Modifier mon rôle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form action="{{ path('app_espace_role_update') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="_token" value="{{ csrf_token('update_role') }}">
+                    
+                    <p class="text-muted mb-4">Choisissez comment vous souhaitez utiliser EcoRide :</p>
+
+                    <div class="form-check p-3 border rounded mb-2 {{ app.user.role == 'PASSAGER' ? 'border-success bg-light-green' : '' }}">
+                        <input class="form-check-input" type="radio" name="role" id="rolePassager" 
+                               value="PASSAGER" {{ app.user.role == 'PASSAGER' ? 'checked' : '' }}>
+                        <label class="form-check-label w-100" for="rolePassager">
+                            <strong><i class="bi bi-person me-2"></i>Passager uniquement</strong>
+                            <p class="mb-0 small text-muted">Je recherche des covoiturages</p>
+                        </label>
+                    </div>
+
+                    <div class="form-check p-3 border rounded mb-2 {{ app.user.role == 'CHAUFFEUR' ? 'border-success bg-light-green' : '' }}">
+                        <input class="form-check-input" type="radio" name="role" id="roleChauffeur" 
+                               value="CHAUFFEUR" {{ app.user.role == 'CHAUFFEUR' ? 'checked' : '' }}>
+                        <label class="form-check-label w-100" for="roleChauffeur">
+                            <strong><i class="bi bi-car-front me-2"></i>Chauffeur uniquement</strong>
+                            <p class="mb-0 small text-muted">Je propose des trajets</p>
+                        </label>
+                    </div>
+
+                    <div class="form-check p-3 border rounded {{ app.user.role == 'CHAUFFEUR_PASSAGER' ? 'border-success bg-light-green' : '' }}">
+                        <input class="form-check-input" type="radio" name="role" id="roleBoth" 
+                               value="CHAUFFEUR_PASSAGER" {{ app.user.role == 'CHAUFFEUR_PASSAGER' ? 'checked' : '' }}>
+                        <label class="form-check-label w-100" for="roleBoth">
+                            <strong><i class="bi bi-people me-2"></i>Chauffeur et Passager</strong>
+                            <p class="mb-0 small text-muted">Je fais les deux selon mes besoins</p>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

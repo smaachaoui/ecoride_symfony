@@ -1,0 +1,61 @@
+{# templates/espace_utilisateur/_preferences.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-sliders me-2"></i>Mes préférences
+    </h1>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <p class="text-muted mb-4">
+            Définissez vos préférences pour informer les passagers de vos attentes lors des trajets.
+        </p>
+
+        <form action="{{ path('app_espace_preferences_update') }}" method="POST">
+            <input type="hidden" name="_token" value="{{ csrf_token('update_preferences') }}">
+            
+            <div class="mb-3">
+                <div class="form-check form-switch p-3 border rounded d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="accepteFumeurs" name="accepte_fumeurs" 
+                           {{ app.user.preferences and app.user.preferences.accepteFumeurs ? 'checked' : '' }}>
+                    <label class="form-check-label ms-3 flex-grow-1" for="accepteFumeurs">
+                        <i class="bi bi-wind me-2 text-dark-green"></i>
+                        <strong>J'accepte les fumeurs</strong>
+                        <p class="mb-0 small text-muted">Les passagers pourront fumer pendant le trajet</p>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check form-switch p-3 border rounded d-flex align-items-center">
+                    <input class="form-check-input" type="checkbox" id="accepteAnimaux" name="accepte_animaux"
+                           {{ app.user.preferences and app.user.preferences.accepteAnimaux ? 'checked' : '' }}>
+                    <label class="form-check-label ms-3 flex-grow-1" for="accepteAnimaux">
+                        <i class="bi bi-heart me-2 text-dark-green"></i>
+                        <strong>J'accepte les animaux</strong>
+                        <p class="mb-0 small text-muted">Les passagers pourront voyager avec leur animal de compagnie</p>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="preferencesPerso" class="form-label">
+                    <i class="bi bi-chat-text me-2"></i>Préférences personnalisées
+                </label>
+                <textarea class="form-control" id="preferencesPerso" name="preferences_personnalisees" rows="4" 
+                          placeholder="Ex: Musique pendant le trajet, Discussion appréciée, Silence préféré, Climatisation...">{{ app.user.preferences ? app.user.preferences.preferencesPersonnalisees : '' }}</textarea>
+                <div class="form-text">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Ajoutez des informations supplémentaires pour vos passagers
+                </div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Enregistrer mes préférences
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

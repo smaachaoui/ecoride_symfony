@@ -1,0 +1,235 @@
+{# templates/espace_utilisateur/_vehicules.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-car-front me-2"></i>Mes véhicules
+    </h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddVehicule">
+        <i class="bi bi-plus-circle me-1"></i>Ajouter
+    </button>
+</div>
+
+{% if app.user.vehicules|length > 0 %}
+    <div class="row g-4">
+        {% for vehicule in app.user.vehicules %}
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="mb-1 text-dark-green">{{ vehicule.marque }} {{ vehicule.modele }}</h5>
+                                <span class="badge {{ vehicule.energie == 'Electrique' ? 'bg-success' : 'bg-secondary' }}">
+                                    {% if vehicule.energie == 'Electrique' %}
+                                        <i class="bi bi-lightning-charge me-1"></i>
+                                    {% endif %}
+                                    {{ vehicule.energie }}
+                                </span>
+                            </div>
+                            <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 45px; height: 45px;">
+                                <i class="bi bi-car-front text-dark-green"></i>
+                            </div>
+                        </div>
+
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li class="mb-1">
+                                <i class="bi bi-card-text me-2"></i>{{ vehicule.immatriculation }}
+                            </li>
+                            <li class="mb-1">
+                                <i class="bi bi-calendar me-2"></i>{{ vehicule.datePremiereImmatriculation|date('d/m/Y') }}
+                            </li>
+                            <li>
+                                <i class="bi bi-people me-2"></i>{{ vehicule.placesDisponibles }} place(s) disponible(s)
+                            </li>
+                        </ul>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-success flex-fill"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalEditVehicule{{ vehicule.id }}">
+                                <i class="bi bi-pencil me-1"></i>Modifier
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger flex-fill"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalDeleteVehicule{{ vehicule.id }}">
+                                <i class="bi bi-trash me-1"></i>Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Modal Modifier Véhicule #}
+            <div class="modal fade" id="modalEditVehicule{{ vehicule.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title text-dark-green">
+                                <i class="bi bi-pencil me-2"></i>Modifier le véhicule
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <form action="{{ path('app_espace_vehicule_update', {'id': vehicule.id}) }}" method="POST">
+                            <div class="modal-body">
+                                <input type="hidden" name="_token" value="{{ csrf_token('update_vehicule_' ~ vehicule.id) }}">
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="marque{{ vehicule.id }}" class="form-label">Marque</label>
+                                        <input type="text" class="form-control" id="marque{{ vehicule.id }}" 
+                                               name="marque" value="{{ vehicule.marque }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="modele{{ vehicule.id }}" class="form-label">Modèle</label>
+                                        <input type="text" class="form-control" id="modele{{ vehicule.id }}" 
+                                               name="modele" value="{{ vehicule.modele }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="immatriculation{{ vehicule.id }}" class="form-label">Immatriculation</label>
+                                    <input type="text" class="form-control" id="immatriculation{{ vehicule.id }}" 
+                                           name="immatriculation" value="{{ vehicule.immatriculation }}" 
+                                           pattern="[A-Z]{2}-[0-9]{3}-[A-Z]{2}" placeholder="AB-123-CD" required>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="energie{{ vehicule.id }}" class="form-label">Énergie</label>
+                                        <select class="form-select" id="energie{{ vehicule.id }}" name="energie" required>
+                                            <option value="Essence" {{ vehicule.energie == 'Essence' ? 'selected' : '' }}>Essence</option>
+                                            <option value="Diesel" {{ vehicule.energie == 'Diesel' ? 'selected' : '' }}>Diesel</option>
+                                            <option value="Electrique" {{ vehicule.energie == 'Electrique' ? 'selected' : '' }}>Électrique</option>
+                                            <option value="Hybride" {{ vehicule.energie == 'Hybride' ? 'selected' : '' }}>Hybride</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="places{{ vehicule.id }}" class="form-label">Places disponibles</label>
+                                        <input type="number" class="form-control" id="places{{ vehicule.id }}" 
+                                               name="places_disponibles" value="{{ vehicule.placesDisponibles }}" 
+                                               min="1" max="8" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="date{{ vehicule.id }}" class="form-label">Date de 1ère immatriculation</label>
+                                    <input type="date" class="form-control" id="date{{ vehicule.id }}" 
+                                           name="date_premiere_immatriculation" 
+                                           value="{{ vehicule.datePremiereImmatriculation|date('Y-m-d') }}" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {# Modal Supprimer Véhicule #}
+            <div class="modal fade" id="modalDeleteVehicule{{ vehicule.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title text-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Êtes-vous sûr de vouloir supprimer le véhicule <strong>{{ vehicule.marque }} {{ vehicule.modele }}</strong> ?</p>
+                            <p class="text-muted small mb-0">Cette action est irréversible.</p>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <form action="{{ path('app_espace_vehicule_delete', {'id': vehicule.id}) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_vehicule_' ~ vehicule.id) }}">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+            <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 text-dark-green">Aucun véhicule enregistré</h5>
+            <p class="text-muted">Ajoutez votre premier véhicule pour proposer des covoiturages.</p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddVehicule">
+                <i class="bi bi-plus-circle me-1"></i>Ajouter un véhicule
+            </button>
+        </div>
+    </div>
+{% endif %}
+
+{# Modal Ajouter Véhicule #}
+<div class="modal fade" id="modalAddVehicule" tabindex="-1" aria-labelledby="modalAddVehiculeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-dark-green" id="modalAddVehiculeLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Ajouter un véhicule
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form action="{{ path('app_espace_vehicule_add') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="_token" value="{{ csrf_token('add_vehicule') }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="newMarque" class="form-label">Marque</label>
+                            <input type="text" class="form-control" id="newMarque" name="marque" 
+                                   placeholder="Ex: Renault" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="newModele" class="form-label">Modèle</label>
+                            <input type="text" class="form-control" id="newModele" name="modele" 
+                                   placeholder="Ex: Clio" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newImmatriculation" class="form-label">Immatriculation</label>
+                        <input type="text" class="form-control" id="newImmatriculation" name="immatriculation" 
+                               pattern="[A-Z]{2}-[0-9]{3}-[A-Z]{2}" placeholder="AB-123-CD" required>
+                        <div class="form-text">Format : AB-123-CD</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="newEnergie" class="form-label">Énergie</label>
+                            <select class="form-select" id="newEnergie" name="energie" required>
+                                <option value="">Sélectionner...</option>
+                                <option value="Essence">Essence</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Electrique">Électrique</option>
+                                <option value="Hybride">Hybride</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="newPlaces" class="form-label">Places disponibles</label>
+                            <input type="number" class="form-control" id="newPlaces" name="places_disponibles" 
+                                   min="1" max="8" value="4" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newDate" class="form-label">Date de 1ère immatriculation</label>
+                        <input type="date" class="form-control" id="newDate" name="date_premiere_immatriculation" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
