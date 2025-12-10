@@ -1,53 +1,136 @@
-/* public/css/style.css */
+/* assets/styles/app.css */
+
+/* ============================================
+   ECORIDE - Charte Graphique
+   ============================================ */
 
 :root {
     --dark-green: #114b1e;
     --medium-green: #23953c;
     --light-green: #c7fbd3;
+    --white: #ffffff;
+    --gray-light: #f8f9fa;
 }
+
+/* ============================================
+   Typographie
+   ============================================ */
 
 body {
     font-family: 'Poppins', sans-serif;
 }
 
-/* Couleurs utilitaires */
-.bg-dark-green { background-color: var(--dark-green) !important; }
-.bg-medium-green { background-color: var(--medium-green) !important; }
-.bg-light-green { background-color: var(--light-green) !important; }
+/* ============================================
+   Couleurs utilitaires - Background
+   ============================================ */
 
-.text-dark-green { color: var(--dark-green) !important; }
-.text-medium-green { color: var(--medium-green) !important; }
+.bg-dark-green {
+    background-color: var(--dark-green) !important;
+}
 
-/* Boutons personnalisés */
+.bg-medium-green {
+    background-color: var(--medium-green) !important;
+}
+
+.bg-light-green {
+    background-color: var(--light-green) !important;
+}
+
+/* ============================================
+   Couleurs utilitaires - Texte
+   ============================================ */
+
+.text-dark-green {
+    color: var(--dark-green) !important;
+}
+
+.text-medium-green {
+    color: var(--medium-green) !important;
+}
+
+/* ============================================
+   Boutons
+   ============================================ */
+
 .btn-primary {
     background-color: var(--dark-green);
     border-color: var(--dark-green);
+    color: var(--white);
 }
-.btn-primary:hover {
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
     background-color: var(--medium-green);
     border-color: var(--medium-green);
+    color: var(--white);
+}
+
+.btn-outline-success {
+    color: var(--dark-green);
+    border-color: var(--dark-green);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+    color: var(--white);
 }
 
 .btn-rechercher {
     background-color: var(--dark-green);
     border-color: var(--dark-green);
-    color: white;
+    color: var(--white);
     width: 100%;
     padding: 0.5rem 1rem;
 }
+
 .btn-rechercher:hover {
     background-color: var(--medium-green);
     border-color: var(--medium-green);
-    color: white;
+    color: var(--white);
 }
 
-/* Hero section */
+/* ============================================
+   Navbar
+   ============================================ */
+
+.navbar .nav-link.active {
+    color: var(--medium-green) !important;
+    font-weight: 500;
+}
+
+.navbar .nav-link:hover {
+    color: var(--medium-green) !important;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+
+.footer {
+    background-color: var(--dark-green);
+}
+
+.footer a:hover {
+    color: var(--light-green) !important;
+}
+
+/* ============================================
+   Hero Section
+   ============================================ */
+
 .hero-section {
-    background: linear-gradient(rgba(17, 75, 30, 0.7), rgba(17, 75, 30, 0.7)), url('../images/hero-bg.jpg') center/cover no-repeat;
-    min-height: 300px;
+    background: linear-gradient(rgba(17, 75, 30, 0.8), rgba(17, 75, 30, 0.8));
+    min-height: 350px;
 }
 
-/* Feature icons */
+/* ============================================
+   Feature Icons
+   ============================================ */
+
 .feature-icon {
     width: 80px;
     height: 80px;
@@ -58,13 +141,213 @@ body {
     justify-content: center;
     margin: 0 auto;
 }
+
 .feature-icon i {
     font-size: 2rem;
     color: var(--dark-green);
 }
 
-/* Navbar active link */
-.navbar .nav-link.active {
-    color: var(--medium-green) !important;
+/* ============================================
+   Cards
+   ============================================ */
+
+.card {
+    border-radius: 12px;
+}
+
+.covoiturage-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.covoiturage-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ============================================
+   Badges
+   ============================================ */
+
+.badge.bg-success {
+    background-color: var(--medium-green) !important;
+}
+
+.badge.bg-dark-green {
+    background-color: var(--dark-green) !important;
+}
+
+/* ============================================
+   Forms
+   ============================================ */
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--medium-green);
+    box-shadow: 0 0 0 0.25rem rgba(35, 149, 60, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+}
+
+.form-check-input:focus {
+    border-color: var(--medium-green);
+    box-shadow: 0 0 0 0.25rem rgba(35, 149, 60, 0.25);
+}
+
+/* ============================================
+   Sidebar - Espace Utilisateur
+   ============================================ */
+
+.nav-link.active {
+    color: var(--dark-green) !important;
     font-weight: 500;
+    background-color: var(--light-green) !important;
+    border-left: 3px solid var(--dark-green);
+}
+
+.nav-link:hover:not(.active) {
+    background-color: var(--gray-light);
+    color: var(--dark-green) !important;
+}
+
+/* ============================================
+   Tabs - Espace Utilisateur
+   ============================================ */
+
+.nav-pills .nav-link {
+    color: var(--dark-green);
+    border-radius: 8px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--dark-green);
+    color: var(--white) !important;
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background-color: var(--light-green);
+}
+
+/* ============================================
+   Accordion - Filtres
+   ============================================ */
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--light-green);
+    color: var(--dark-green);
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(35, 149, 60, 0.25);
+    border-color: var(--medium-green);
+}
+
+/* ============================================
+   Alerts
+   ============================================ */
+
+.alert-success {
+    background-color: var(--light-green);
+    border-color: var(--medium-green);
+    color: var(--dark-green);
+}
+
+/* ============================================
+   Stars Rating
+   ============================================ */
+
+    .bi-star-fill.text-warning,
+    .bi-star-half.text-warning {
+        color: #ffc107 !important;
+    }
+
+/* ============================================
+   Rating Stars
+   ============================================ */
+
+    .rating-input .rating-label {
+        color: #ddd;
+        transition: color 0.2s ease;
+    }
+
+    .rating-input .rating-label:hover,
+    .rating-input .rating-label:hover ~ .rating-label {
+        color: #ffc107;
+    }
+
+    .rating-input .rating-star:checked ~ .rating-label {
+        color: #ddd;
+    }
+
+    .rating-input .rating-star:checked + .rating-label,
+    .rating-input:has(.rating-star:checked) .rating-label:has(~ .form-check .rating-star:checked) {
+        color: #ffc107;
+    }
+
+    /* Solution alternative plus simple avec JS */
+    .rating-input .rating-label.active {
+        color: #ffc107;
+    }
+
+    .rating-input .rating-label i.bi-star-fill {
+        color: #ffc107;
+    }
+
+/* ============================================
+   Role Selection
+   ============================================ */
+
+.role-option.border-success {
+    border-color: var(--medium-green) !important;
+    border-width: 2px !important;
+}
+
+/* ============================================
+   Modal
+   ============================================ */
+
+.modal-content {
+    border-radius: 12px;
+}
+
+/* ============================================
+   Scrollbar Custom (optional)
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--medium-green);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-green);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 991.98px) {
+    .hero-section {
+        min-height: 250px;
+    }
+
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
+    }
 }
