@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Utilisateur;
+use App\Repository\AvisRepository;
+use App\Repository\CovoiturageRepository;
+use App\Repository\ParticipationRepository;
+use App\Repository\UtilisateurRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+#[Route('/admin')]
+#[IsGranted('ROLE_ADMIN')]
+class AdminController extends AbstractController
+{
+    #[Route('', name: 'app_admin_dashboard')]
+    public function index(
+        UtilisateurRepository $utilisateurRepository,
+        CovoiturageRepository $covoiturageRepository,
+        ParticipationRepository $participationRepository,
+        AvisRepository $avisRepository
+    ): Response {
+        // Statistiques générales
+        $stats = [
+            'total_utilisateurs' => $utilisateurRepository->count([]),
+            'total_chauffeurs' => $utilisateurRepository->countByRole(['CHAUFFEUR', 'CHAUFFEUR_PASSAGER']),
+            'total_passagers' => $utilisateurRepository->countByRole(['PASSAGER', 'CHAUFFEUR_PASSAGER']),
+            'total_employes' => $utilisateurRepository->countByRole(['EMPLOYE']),
+            'utilisateurs_suspendus' => $utilisateurRepository->count(['is_suspended' => true]),
+            'total_covoiturages' => $covoiturageRepository->count([]),
+            'covoiturages_ce_mois' => $covoiturageRepository->countCovoituragesCeMois(),
+            'total_participations' => $participationRepository->count([]),
+            'credits_plateforme' => $participationRepository->calculerCreditsPlateforme(),
+            'avis_en_attente' => $avisRepository->count(['statut' => 'en_attente']),
+        ];
+
+        // Derniers utilisateurs inscrits
+        $derniersUtilisateurs = $utilisateurRepository->findBy([], ['created_at' => 'DESC'], 5);
+
+        // Derniers covoiturages
+        $derniersCovoiturages = $covoiturageRepository->findBy([], ['date_depart' => 'DESC'], 5);
+
+        return $this->render('admin/index.html.twig', [
+            'stats' => $stats,
+            'derniersUtilisateurs' => $derniersUtilisateurs,
+            'derniersCovoiturages' => $derniersCovoiturages,
+        ]);
+    }
+
+    #[Route('/utilisateurs', name: 'app_admin_utilisateurs')]
+    public function utilisateurs(
+        Request $request,
+        UtilisateurRepository $utilisateurRepository
+    ): Response {
+        $search = $request->query->get('search', '');
+        $roleFilter = $request->query->get('role', '');
+        $statutFilter = $request->query->get('statut', '');
+
+        $utilisateurs = $utilisateurRepository->findByFilters($search, $roleFilter, $statutFilter);
+
+        return $this->render('admin/utilisateurs.html.twig', [
+            'utilisateurs' => $utilisateurs,
+            'search' => $search,
+            'roleFilter' => $roleFilter,
+            'statutFilter' => $statutFilter,
+        ]);
+    }
+
+    #[Route('/utilisateur/{id}/suspendre', name: 'app_admin_suspendre', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function suspendre(
+        Utilisateur $utilisateur,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('suspendre_' . $utilisateur->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_admin_utilisateurs');
+        }
+
+        // Ne pas suspendre un admin
+        if ($utilisateur->isAdmin()) {
+            $this->addFlash('danger', 'Impossible de suspendre un administrateur.');
+            return $this->redirectToRoute('app_admin_utilisateurs');
+        }
+
+        $utilisateur->setIsSuspended(true);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le compte de ' . $utilisateur->getPseudo() . ' a été suspendu.');
+
+        return $this->redirectToRoute('app_admin_utilisateurs');
+    }
+
+    #[Route('/utilisateur/{id}/reactiver', name: 'app_admin_reactiver', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function reactiver(
+        Utilisateur $utilisateur,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('reactiver_' . $utilisateur->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_admin_utilisateurs');
+        }
+
+        $utilisateur->setIsSuspended(false);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le compte de ' . $utilisateur->getPseudo() . ' a été réactivé.');
+
+        return $this->redirectToRoute('app_admin_utilisateurs');
+    }
+
+    #[Route('/employes', name: 'app_admin_employes')]
+    public function employes(UtilisateurRepository $utilisateurRepository): Response
+    {
+        $employes = $utilisateurRepository->findBy(['role' => Utilisateur::ROLE_EMPLOYE], ['created_at' => 'DESC']);
+
+        return $this->render('admin/employes.html.twig', [
+            'employes' => $employes,
+        ]);
+    }
+
+    #[Route('/employe/creer', name: 'app_admin_employe_creer', methods: ['POST'])]
+    public function creerEmploye(
+        Request $request,
+        UserPasswordHasherInterface $passwordHasher,
+        UtilisateurRepository $utilisateurRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('creer_employe', $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        $pseudo = trim($request->request->get('pseudo'));
+        $email = trim($request->request->get('email'));
+        $password = $request->request->get('password');
+
+        // Validations
+        if (empty($pseudo) || empty($email) || empty($password)) {
+            $this->addFlash('danger', 'Tous les champs sont obligatoires.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        if ($utilisateurRepository->findByEmail($email)) {
+            $this->addFlash('danger', 'Un compte avec cet email existe déjà.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        if ($utilisateurRepository->findByPseudo($pseudo)) {
+            $this->addFlash('danger', 'Ce pseudo est déjà utilisé.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        if (strlen($password) < 8) {
+            $this->addFlash('danger', 'Le mot de passe doit contenir au moins 8 caractères.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        // Créer l'employé
+        $employe = new Utilisateur();
+        $employe->setPseudo($pseudo);
+        $employe->setEmail($email);
+        $employe->setRole(Utilisateur::ROLE_EMPLOYE);
+        $employe->setRolesSystem(['ROLE_USER', 'ROLE_EMPLOYE']);
+        $employe->setCredits(0); // Les employés n'ont pas besoin de crédits
+
+        $hashedPassword = $passwordHasher->hashPassword($employe, $password);
+        $employe->setPassword($hashedPassword);
+
+        $entityManager->persist($employe);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le compte employé de ' . $pseudo . ' a été créé.');
+
+        return $this->redirectToRoute('app_admin_employes');
+    }
+
+    #[Route('/employe/{id}/supprimer', name: 'app_admin_employe_supprimer', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function supprimerEmploye(
+        Utilisateur $utilisateur,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid('supprimer_employe_' . $utilisateur->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        if ($utilisateur->getRole() !== Utilisateur::ROLE_EMPLOYE) {
+            $this->addFlash('danger', 'Cet utilisateur n\'est pas un employé.');
+            return $this->redirectToRoute('app_admin_employes');
+        }
+
+        $pseudo = $utilisateur->getPseudo();
+        $entityManager->remove($utilisateur);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Le compte employé de ' . $pseudo . ' a été supprimé.');
+
+        return $this->redirectToRoute('app_admin_employes');
+    }
+
+    #[Route('/statistiques', name: 'app_admin_statistiques')]
+    public function statistiques(
+        CovoiturageRepository $covoiturageRepository,
+        ParticipationRepository $participationRepository,
+        UtilisateurRepository $utilisateurRepository
+    ): Response {
+        // Stats par mois (6 derniers mois)
+        $statsParMois = $covoiturageRepository->getStatistiquesParMois(6);
+
+        // Stats crédits
+        $creditsPlateforme = $participationRepository->calculerCreditsPlateforme();
+        $creditsParMois = $participationRepository->getCreditsParMois(6);
+
+        // Top chauffeurs
+        $topChauffeurs = $covoiturageRepository->getTopChauffeurs(5);
+
+        // Trajets les plus populaires
+        $trajetsPopulaires = $covoiturageRepository->getTrajetsPopulaires(5);
+
+        return $this->render('admin/statistiques.html.twig', [
+            'statsParMois' => $statsParMois,
+            'creditsPlateforme' => $creditsPlateforme,
+            'creditsParMois' => $creditsParMois,
+            'topChauffeurs' => $topChauffeurs,
+            'trajetsPopulaires' => $trajetsPopulaires,
+        ]);
+    }
+}
