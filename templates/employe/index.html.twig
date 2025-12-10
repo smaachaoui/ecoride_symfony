@@ -1,0 +1,252 @@
+{# templates/employe/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Espace Employé - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5 bg-light min-vh-100">
+        <div class="container">
+            {# En-tête #}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 text-dark-green mb-1">
+                        <i class="bi bi-headset me-2"></i>Espace Employé
+                    </h1>
+                    <p class="text-muted mb-0">Bienvenue, {{ app.user.pseudo }}</p>
+                </div>
+                <div class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>{{ 'now'|date('d/m/Y') }}
+                </div>
+            </div>
+
+            {# Statistiques rapides #}
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-car-front text-dark-green fs-4"></i>
+                                </div>
+                                <div>
+                                    <h2 class="h3 mb-0 text-dark-green">{{ stats.covoiturages_jour }}</h2>
+                                    <p class="text-muted mb-0 small">Covoiturages aujourd'hui</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 {{ stats.avis_en_attente > 0 ? 'border-warning border-2' : '' }}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                                </div>
+                                <div>
+                                    <h2 class="h3 mb-0 text-warning">{{ stats.avis_en_attente }}</h2>
+                                    <p class="text-muted mb-0 small">Avis en attente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-check-circle text-success fs-4"></i>
+                                </div>
+                                <div>
+                                    <h2 class="h3 mb-0 text-success">{{ stats.avis_valides_today }}</h2>
+                                    <p class="text-muted mb-0 small">Avis validés aujourd'hui</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {# Covoiturages du jour #}
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-dark-green">
+                                <i class="bi bi-car-front me-2"></i>Covoiturages du jour
+                            </h5>
+                            <a href="{{ path('app_employe_covoiturages') }}" class="btn btn-sm btn-outline-success">
+                                Voir tout
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if covoituragesDuJour|length > 0 %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Heure</th>
+                                                <th>Trajet</th>
+                                                <th>Chauffeur</th>
+                                                <th>Places</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for covoit in covoituragesDuJour|slice(0, 5) %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="fw-medium">{{ covoit.dateDepart|date('H:i') }}</span>
+                                                    </td>
+                                                    <td>
+                                                        {{ covoit.villeDepart }}
+                                                        <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                                                        {{ covoit.villeArrivee }}
+                                                        {% if covoit.ecologique %}
+                                                            <span class="badge bg-success ms-1">Éco</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ covoit.utilisateurId.pseudo }}</td>
+                                                    <td>
+                                                        <span class="badge {{ covoit.placesRestantes > 0 ? 'bg-success' : 'bg-secondary' }}">
+                                                            {{ covoit.placesRestantes }}/{{ covoit.vehiculeId.placesDisponibles }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="modal" 
+                                                                data-bs-target="#modalProbleme{{ covoit.id }}">
+                                                            <i class="bi bi-exclamation-triangle"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="p-4 text-center">
+                                    <i class="bi bi-calendar-x text-muted fs-1"></i>
+                                    <p class="text-muted mt-2 mb-0">Aucun covoiturage prévu aujourd'hui</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# Avis en attente #}
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-dark-green">
+                                <i class="bi bi-chat-square-text me-2"></i>Avis en attente
+                                {% if stats.avis_en_attente > 0 %}
+                                    <span class="badge bg-warning ms-1">{{ stats.avis_en_attente }}</span>
+                                {% endif %}
+                            </h5>
+                            <a href="{{ path('app_employe_avis') }}" class="btn btn-sm btn-outline-success">
+                                Voir tout
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if avisEnAttente|length > 0 %}
+                                <div class="list-group list-group-flush">
+                                    {% for avis in avisEnAttente|slice(0, 5) %}
+                                        <div class="list-group-item p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <span class="fw-medium">{{ avis.utilisateurId.pseudo }}</span>
+                                                    <span class="text-muted mx-1">→</span>
+                                                    <span class="text-muted small">{{ avis.covoiturageId.utilisateurId.pseudo }}</span>
+                                                </div>
+                                                <div>
+                                                    {% for i in 1..5 %}
+                                                        <i class="bi bi-star{{ i <= avis.note ? '-fill text-warning' : ' text-muted' }} small"></i>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% if avis.commentaire %}
+                                                <p class="small text-muted mb-2">{{ avis.commentaire|slice(0, 80) }}{{ avis.commentaire|length > 80 ? '...' : '' }}</p>
+                                            {% endif %}
+                                            <div class="d-flex gap-2">
+                                                <form action="{{ path('app_employe_avis_valider', {'id': avis.id}) }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('avis_action_' ~ avis.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="{{ path('app_employe_avis_refuser', {'id': avis.id}) }}" method="POST" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('avis_action_' ~ avis.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="p-4 text-center">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <p class="text-muted mt-2 mb-0">Aucun avis en attente</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# Modals Problème pour chaque covoiturage #}
+    {% for covoit in covoituragesDuJour %}
+        <div class="modal fade" id="modalProbleme{{ covoit.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Signaler un problème
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <form action="{{ path('app_employe_signaler_probleme', {'id': covoit.id}) }}" method="POST">
+                        <div class="modal-body">
+                            <input type="hidden" name="_token" value="{{ csrf_token('probleme_' ~ covoit.id) }}">
+                            
+                            <div class="alert alert-info">
+                                <strong>Trajet :</strong> {{ covoit.villeDepart }} → {{ covoit.villeArrivee }}<br>
+                                <strong>Chauffeur :</strong> {{ covoit.utilisateurId.pseudo }}<br>
+                                <strong>Date :</strong> {{ covoit.dateDepart|date('d/m/Y à H:i') }}
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Attention :</strong> Signaler un problème va rembourser tous les passagers de ce covoiturage.
+                                <br>
+                                <strong>{{ covoit.participations|length }}</strong> passager(s) sera(ont) remboursé(s).
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="motif{{ covoit.id }}" class="form-label">Motif du problème</label>
+                                <textarea class="form-control" id="motif{{ covoit.id }}" name="motif" rows="3" 
+                                          placeholder="Décrivez le problème..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Signaler et rembourser
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

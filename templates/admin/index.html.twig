@@ -1,0 +1,241 @@
+{# templates/admin/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Espace Administrateur - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5 bg-light min-vh-100">
+        <div class="container">
+            {# En-tête #}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 text-dark-green mb-1">
+                        <i class="bi bi-shield-check me-2"></i>Espace Administrateur
+                    </h1>
+                    <p class="text-muted mb-0">Bienvenue, {{ app.user.pseudo }}</p>
+                </div>
+                <div class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>{{ 'now'|date('d/m/Y') }}
+                </div>
+            </div>
+
+            {# Navigation rapide #}
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <a href="{{ path('app_admin_utilisateurs') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="bi bi-people text-dark-green fs-2 mb-2"></i>
+                            <h6 class="mb-0">Utilisateurs</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ path('app_admin_employes') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="bi bi-person-badge text-dark-green fs-2 mb-2"></i>
+                            <h6 class="mb-0">Employés</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ path('app_admin_statistiques') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="bi bi-graph-up text-dark-green fs-2 mb-2"></i>
+                            <h6 class="mb-0">Statistiques</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ path('app_employe_avis') }}" class="card border-0 shadow-sm text-decoration-none h-100 {{ stats.avis_en_attente > 0 ? 'border-warning border-2' : '' }}">
+                        <div class="card-body text-center py-4">
+                            <i class="bi bi-chat-square-text text-dark-green fs-2 mb-2"></i>
+                            <h6 class="mb-0">
+                                Avis
+                                {% if stats.avis_en_attente > 0 %}
+                                    <span class="badge bg-warning">{{ stats.avis_en_attente }}</span>
+                                {% endif %}
+                            </h6>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            {# Statistiques principales #}
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-people text-dark-green fs-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="h4 mb-0 text-dark-green">{{ stats.total_utilisateurs }}</h3>
+                                    <p class="text-muted mb-0 small">Utilisateurs</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-car-front text-dark-green fs-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="h4 mb-0 text-dark-green">{{ stats.total_covoiturages }}</h3>
+                                    <p class="text-muted mb-0 small">Covoiturages</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light-green rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-ticket text-dark-green fs-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="h4 mb-0 text-dark-green">{{ stats.total_participations }}</h3>
+                                    <p class="text-muted mb-0 small">Participations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100 bg-dark-green text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-coin text-dark-green fs-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="h4 mb-0">{{ stats.credits_plateforme }}</h3>
+                                    <p class="mb-0 small opacity-75">Crédits plateforme</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {# Derniers utilisateurs #}
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-dark-green">
+                                <i class="bi bi-person-plus me-2"></i>Derniers inscrits
+                            </h5>
+                            <a href="{{ path('app_admin_utilisateurs') }}" class="btn btn-sm btn-outline-success">
+                                Voir tout
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Pseudo</th>
+                                            <th>Rôle</th>
+                                            <th>Date</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in derniersUtilisateurs %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if user.photo %}
+                                                            <img src="{{ asset('uploads/photos/' ~ user.photo) }}" 
+                                                                 class="rounded-circle me-2" width="30" height="30"
+                                                                 style="object-fit: cover;">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                                 style="width: 30px; height: 30px;">
+                                                                <i class="bi bi-person text-dark-green small"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        {{ user.pseudo }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ user.role }}</span>
+                                                </td>
+                                                <td class="small text-muted">{{ user.createdAt|date('d/m/Y') }}</td>
+                                                <td>
+                                                    {% if user.isSuspended %}
+                                                        <span class="badge bg-danger">Suspendu</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success">Actif</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Derniers covoiturages #}
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-dark-green">
+                                <i class="bi bi-car-front me-2"></i>Derniers covoiturages
+                            </h5>
+                            <a href="{{ path('app_employe_covoiturages') }}" class="btn btn-sm btn-outline-success">
+                                Voir tout
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Trajet</th>
+                                            <th>Chauffeur</th>
+                                            <th>Date</th>
+                                            <th>Places</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for covoit in derniersCovoiturages %}
+                                            <tr>
+                                                <td>
+                                                    {{ covoit.villeDepart }}
+                                                    <i class="bi bi-arrow-right mx-1 text-muted small"></i>
+                                                    {{ covoit.villeArrivee }}
+                                                </td>
+                                                <td>{{ covoit.utilisateurId.pseudo }}</td>
+                                                <td class="small text-muted">{{ covoit.dateDepart|date('d/m/Y') }}</td>
+                                                <td>
+                                                    <span class="badge {{ covoit.placesRestantes > 0 ? 'bg-success' : 'bg-secondary' }}">
+                                                        {{ covoit.placesRestantes }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

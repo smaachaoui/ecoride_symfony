@@ -1,0 +1,20 @@
+{# templates/reset_password/email.html.twig #}
+
+<h1>Bonjour {{ user.pseudo }} !</h1>
+
+<p>Vous avez demandé la réinitialisation de votre mot de passe EcoRide.</p>
+
+<p>
+    <a href="{{ url('app_reset_password', {token: resetToken.token}) }}">
+        Cliquez ici pour réinitialiser votre mot de passe
+    </a>
+</p>
+
+<p>Ce lien expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.</p>
+
+<p>Si vous n'avez pas fait cette demande, vous pouvez ignorer cet email.</p>
+
+<p>
+    À bientôt sur EcoRide !<br>
+    L'équipe EcoRide
+</p>

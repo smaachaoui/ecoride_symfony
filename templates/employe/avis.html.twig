@@ -1,0 +1,162 @@
+{# templates/employe/avis.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des avis - Espace Employé - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5 bg-light min-vh-100">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 text-dark-green mb-1">
+                        <i class="bi bi-chat-square-text me-2"></i>Gestion des avis
+                    </h1>
+                    <p class="text-muted mb-0">Validez ou refusez les avis des utilisateurs</p>
+                </div>
+                <a href="{{ path('app_employe_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Retour
+                </a>
+            </div>
+
+            <div class="row g-4">
+                {# Avis en attente #}
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="mb-0">
+                                <i class="bi bi-hourglass-split me-2 text-warning"></i>Avis en attente
+                                {% if avisEnAttente|length > 0 %}
+                                    <span class="badge bg-warning ms-2">{{ avisEnAttente|length }}</span>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if avisEnAttente|length > 0 %}
+                                {% for avis in avisEnAttente %}
+                                    <div class="p-4 border-bottom">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                {# Info auteur et trajet #}
+                                                <div class="d-flex align-items-center mb-2">
+                                                    {% if avis.utilisateurId.photo %}
+                                                        <img src="{{ asset('uploads/photos/' ~ avis.utilisateurId.photo) }}" 
+                                                             alt="{{ avis.utilisateurId.pseudo }}" 
+                                                             class="rounded-circle me-2"
+                                                             width="40" height="40"
+                                                             style="object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                             style="width: 40px; height: 40px;">
+                                                            <i class="bi bi-person text-dark-green"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <span class="fw-medium">{{ avis.utilisateurId.pseudo }}</span>
+                                                        <span class="text-muted small">
+                                                            a noté le trajet de
+                                                        </span>
+                                                        <span class="fw-medium">{{ avis.covoiturageId.utilisateurId.pseudo }}</span>
+                                                    </div>
+                                                </div>
+
+                                                {# Note #}
+                                                <div class="mb-2">
+                                                    {% for i in 1..5 %}
+                                                        <i class="bi bi-star{{ i <= avis.note ? '-fill text-warning' : ' text-muted' }}"></i>
+                                                    {% endfor %}
+                                                    <span class="ms-2 text-muted small">{{ avis.note }}/5</span>
+                                                </div>
+
+                                                {# Commentaire #}
+                                                {% if avis.commentaire %}
+                                                    <div class="bg-light rounded p-3 mb-2">
+                                                        <p class="mb-0">{{ avis.commentaire }}</p>
+                                                    </div>
+                                                {% else %}
+                                                    <p class="text-muted small fst-italic mb-2">Aucun commentaire</p>
+                                                {% endif %}
+
+                                                {# Info trajet #}
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-geo-alt me-1"></i>
+                                                    {{ avis.covoiturageId.villeDepart }} → {{ avis.covoiturageId.villeArrivee }}
+                                                    <i class="bi bi-calendar ms-2 me-1"></i>
+                                                    {{ avis.covoiturageId.dateDepart|date('d/m/Y') }}
+                                                    <i class="bi bi-clock ms-2 me-1"></i>
+                                                    Soumis {{ avis.createdAt|date('d/m/Y à H:i') }}
+                                                </div>
+                                            </div>
+
+                                            {# Actions #}
+                                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                                <div class="d-flex gap-2 justify-content-md-end">
+                                                    <form action="{{ path('app_employe_avis_valider', {'id': avis.id}) }}" method="POST">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('avis_action_' ~ avis.id) }}">
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Valider
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ path('app_employe_avis_refuser', {'id': avis.id}) }}" method="POST">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('avis_action_' ~ avis.id) }}">
+                                                        <button type="submit" class="btn btn-outline-danger">
+                                                            <i class="bi bi-x-circle me-1"></i>Refuser
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="p-5 text-center">
+                                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">Tout est à jour !</h5>
+                                    <p class="text-muted mb-0">Aucun avis en attente de validation.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# Avis récemment traités #}
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history me-2"></i>Récemment traités
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if avisTraites|length > 0 %}
+                                <div class="list-group list-group-flush">
+                                    {% for avis in avisTraites %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <span class="fw-medium small">{{ avis.utilisateurId.pseudo }}</span>
+                                                    <div class="small">
+                                                        {% for i in 1..5 %}
+                                                            <i class="bi bi-star{{ i <= avis.note ? '-fill text-warning' : ' text-muted' }}" style="font-size: 0.7rem;"></i>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <span class="badge {{ avis.isValide ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ avis.isValide ? 'Validé' : 'Refusé' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="p-4 text-center">
+                                    <p class="text-muted mb-0 small">Aucun avis traité récemment</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
