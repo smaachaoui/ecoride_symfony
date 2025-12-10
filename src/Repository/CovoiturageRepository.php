@@ -1,14 +1,13 @@
 <?php
 
+// src/Repository/CovoiturageRepository.php
+
 namespace App\Repository;
 
 use App\Entity\Covoiturage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * @extends ServiceEntityRepository<Covoiturage>
- */
 class CovoiturageRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -16,28 +15,26 @@ class CovoiturageRepository extends ServiceEntityRepository
         parent::__construct($registry, Covoiturage::class);
     }
 
-//    /**
-//     * @return Covoiturage[] Returns an array of Covoiturage objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    // Méthode pour rechercher des covoiturages par ville et date
+    public function findBySearch($villeDepart, $villeArrivee, $dateDepart)
+    {
+        $queryBuilder = $this->createQueryBuilder('c');
 
-//    public function findOneBySomeField($value): ?Covoiturage
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        if ($villeDepart) {
+            $queryBuilder->andWhere('c.ville_depart LIKE :villeDepart')
+                         ->setParameter('villeDepart', '%'.$villeDepart.'%');
+        }
+
+        if ($villeArrivee) {
+            $queryBuilder->andWhere('c.ville_arrivee LIKE :villeArrivee')
+                         ->setParameter('villeArrivee', '%'.$villeArrivee.'%');
+        }
+
+        if ($dateDepart) {
+            $queryBuilder->andWhere('c.date_depart = :dateDepart')
+                         ->setParameter('dateDepart', $dateDepart);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
 }

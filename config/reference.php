@@ -146,7 +146,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         cookie_name?: scalar|null, // The name of the cookie to use when using stateless protection. // Default: "csrf-token"
  *     },
  *     form?: bool|array{ // Form configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         csrf_protection?: array{
  *             enabled?: scalar|null, // Default: null
  *             token_id?: scalar|null, // Default: null
@@ -262,7 +262,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         formats?: array<string, string|list<scalar|null>>,
  *     },
  *     assets?: bool|array{ // Assets configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         strict_mode?: bool, // Throw an exception if an entry is missing from the manifest.json. // Default: false
  *         version_strategy?: scalar|null, // Default: null
  *         version?: scalar|null, // Default: null
@@ -328,7 +328,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         }>,
  *     },
  *     validation?: bool|array{ // Validation configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         cache?: scalar|null, // Deprecated: Setting the "framework.validation.cache.cache" configuration option is deprecated. It will be removed in version 8.0.
  *         enable_attributes?: bool, // Default: true
  *         static_method?: list<scalar|null>,
@@ -367,7 +367,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         }>,
  *     },
  *     property_access?: bool|array{ // Property access configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         magic_call?: bool, // Default: false
  *         magic_get?: bool, // Default: true
  *         magic_set?: bool, // Default: true
@@ -375,11 +375,11 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         throw_exception_on_invalid_property_path?: bool, // Default: true
  *     },
  *     type_info?: bool|array{ // Type info configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         aliases?: array<string, scalar|null>,
  *     },
  *     property_info?: bool|array{ // Property info configuration
- *         enabled?: bool, // Default: false
+ *         enabled?: bool, // Default: true
  *         with_constructor_extractor?: bool, // Registers the constructor extractor.
  *     },
  *     cache?: array{ // Cache configuration
@@ -979,6 +979,16 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         html_to_text_converter?: scalar|null, // A service implementing the "Symfony\Component\Mime\HtmlToTextConverter\HtmlToTextConverterInterface". // Default: null
  *     },
  * }
+ * @psalm-type WebpackEncoreConfig = array{
+ *     output_path: scalar|null, // The path where Encore is building the assets - i.e. Encore.setOutputPath()
+ *     crossorigin?: false|"anonymous"|"use-credentials", // crossorigin value when Encore.enableIntegrityHashes() is used, can be false (default), anonymous or use-credentials // Default: false
+ *     preload?: bool, // preload all rendered script and link tags automatically via the http2 Link header. // Default: false
+ *     cache?: bool, // Enable caching of the entry point file(s) // Default: false
+ *     strict_mode?: bool, // Throw an exception if the entrypoints.json file is missing or an entry is missing from the data // Default: true
+ *     builds?: array<string, scalar|null>,
+ *     script_attributes?: array<string, scalar|null>,
+ *     link_attributes?: array<string, scalar|null>,
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -987,6 +997,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     doctrine?: DoctrineConfig,
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     twig?: TwigConfig,
+ *     webpack_encore?: WebpackEncoreConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -996,6 +1007,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
+ *         webpack_encore?: WebpackEncoreConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1005,6 +1017,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
+ *         webpack_encore?: WebpackEncoreConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1014,6 +1027,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         twig?: TwigConfig,
+ *         webpack_encore?: WebpackEncoreConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,

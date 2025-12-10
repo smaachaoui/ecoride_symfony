@@ -1,0 +1,12 @@
+# public/.htaccess
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Si le fichier ou le répertoire existe, ne pas appliquer la réécriture
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Rediriger toutes les requêtes vers index.php
+    RewriteRule ^(.*)$ /index.php [QSA,L]
+</IfModule>

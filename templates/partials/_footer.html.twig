@@ -1,0 +1,26 @@
+{# templates/partials/_footer.html.twig #}
+
+<footer class="footer bg-dark-green text-white mt-5">
+    <div class="container py-4">
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+                <img src="{{ asset('images/logo-white.png') }}" alt="EcoRide" height="40" class="mb-2">
+                <p class="mb-0 small">Une conduite écologique et économique</p>
+            </div>
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <a href="mailto:contact@ecoride.fr" class="text-white text-decoration-none">
+                    <i class="bi bi-envelope me-2"></i>contact@ecoride.fr
+                </a>
+            </div>
+            <div class="col-md-4 text-center text-md-end">
+                <a href="{{ path('app_mentions_legales') }}" class="text-white text-decoration-none">
+                    Mentions légales
+                </a>
+            </div>
+        </div>
+        <hr class="my-3 border-light">
+        <div class="text-center small">
+            <p class="mb-0">&copy; {{ "now"|date("Y") }} EcoRide - Tous droits réservés</p>
+        </div>
+    </div>
+</footer>

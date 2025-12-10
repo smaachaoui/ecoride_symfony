@@ -1,0 +1,70 @@
+/* public/css/style.css */
+
+:root {
+    --dark-green: #114b1e;
+    --medium-green: #23953c;
+    --light-green: #c7fbd3;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Couleurs utilitaires */
+.bg-dark-green { background-color: var(--dark-green) !important; }
+.bg-medium-green { background-color: var(--medium-green) !important; }
+.bg-light-green { background-color: var(--light-green) !important; }
+
+.text-dark-green { color: var(--dark-green) !important; }
+.text-medium-green { color: var(--medium-green) !important; }
+
+/* Boutons personnalisés */
+.btn-primary {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+}
+.btn-primary:hover {
+    background-color: var(--medium-green);
+    border-color: var(--medium-green);
+}
+
+.btn-rechercher {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+    color: white;
+    width: 100%;
+    padding: 0.5rem 1rem;
+}
+.btn-rechercher:hover {
+    background-color: var(--medium-green);
+    border-color: var(--medium-green);
+    color: white;
+}
+
+/* Hero section */
+.hero-section {
+    background: linear-gradient(rgba(17, 75, 30, 0.7), rgba(17, 75, 30, 0.7)), url('../images/hero-bg.jpg') center/cover no-repeat;
+    min-height: 300px;
+}
+
+/* Feature icons */
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background-color: var(--light-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+.feature-icon i {
+    font-size: 2rem;
+    color: var(--dark-green);
+}
+
+/* Navbar active link */
+.navbar .nav-link.active {
+    color: var(--medium-green) !important;
+    font-weight: 500;
+}
