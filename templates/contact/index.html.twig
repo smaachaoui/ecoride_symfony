@@ -1,0 +1,103 @@
+{# templates/contact/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Contact - EcoRide{% endblock %}
+
+{% block body %}
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center mb-5">
+                        <h1 class="text-dark-green">Contactez-nous</h1>
+                        <p class="text-muted">Une question, une suggestion ? N'hésitez pas à nous écrire !</p>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-4 mb-md-0">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+                                    <h5 class="text-dark-green">Email</h5>
+                                    <a href="mailto:contact@ecoride.fr" class="text-muted text-decoration-none">
+                                        contact@ecoride.fr
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-4 mb-md-0">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </div>
+                                    <h5 class="text-dark-green">Adresse</h5>
+                                    <p class="text-muted mb-0">
+                                        123 Avenue de l'Écologie<br>
+                                        75001 Paris, France
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="feature-icon mb-3">
+                                        <i class="bi bi-clock"></i>
+                                    </div>
+                                    <h5 class="text-dark-green">Horaires</h5>
+                                    <p class="text-muted mb-0">
+                                        Lun - Ven : 9h - 18h<br>
+                                        Sam : 10h - 16h
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mt-5">
+                        <div class="card-body p-4">
+                            <h2 class="h4 text-dark-green mb-4 text-center">Envoyez-nous un message</h2>
+                            
+                            {{ form_start(form, {'attr': {'class': 'contact-form', 'novalidate': 'novalidate'}}) }}
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form_label(form.nom) }}
+                                        {{ form_widget(form.nom) }}
+                                        {{ form_errors(form.nom) }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form_label(form.email) }}
+                                        {{ form_widget(form.email) }}
+                                        {{ form_errors(form.email) }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form_label(form.sujet) }}
+                                    {{ form_widget(form.sujet) }}
+                                    {{ form_errors(form.sujet) }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form_label(form.message) }}
+                                    {{ form_widget(form.message) }}
+                                    {{ form_errors(form.message) }}
+                                </div>
+                                
+                                <div class="text-center">
+                                    {{ form_widget(form.envoyer) }}
+                                </div>
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
