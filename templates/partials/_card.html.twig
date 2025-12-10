@@ -1,0 +1,91 @@
+{# templates/covoiturage/_card.html.twig #}
+
+<div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100 covoiturage-card">
+        <div class="card-body p-4">
+            <div class="row">
+                {# Infos chauffeur #}
+                <div class="col-auto">
+                    <div class="text-center">
+                        {% if covoiturage.utilisateurId.photo %}
+                            <img src="{{ asset('uploads/photos/' ~ covoiturage.utilisateurId.photo) }}" 
+                                 alt="{{ covoiturage.utilisateurId.pseudo }}" 
+                                 class="rounded-circle mb-2" 
+                                 width="60" height="60"
+                                 style="object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center mb-2 mx-auto" 
+                                 style="width: 60px; height: 60px;">
+                                <i class="bi bi-person text-dark-green" style="font-size: 1.5rem;"></i>
+                            </div>
+                        {% endif %}
+                        <p class="mb-0 fw-medium small">{{ covoiturage.utilisateurId.pseudo }}</p>
+                        
+                        {# Note du chauffeur #}
+                        <div class="d-flex align-items-center justify-content-center">
+                            {% set noteMoyenne = covoiturage.utilisateurId.avis|length > 0 
+                                ? (covoiturage.utilisateurId.avis|reduce((carry, avis) => carry + avis.note, 0) / covoiturage.utilisateurId.avis|length)|round(1)
+                                : null %}
+                            
+                            {% if noteMoyenne %}
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <span class="small">{{ noteMoyenne }}</span>
+                            {% else %}
+                                <span class="small text-muted">Nouveau</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# Infos trajet #}
+                <div class="col">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1 text-dark-green">
+                                {{ covoiturage.villeDepart }}
+                                <i class="bi bi-arrow-right mx-2"></i>
+                                {{ covoiturage.villeArrivee }}
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                <i class="bi bi-calendar me-1"></i>
+                                {{ covoiturage.dateDepart|date('d/m/Y') }}
+                                <i class="bi bi-clock ms-2 me-1"></i>
+                                {{ covoiturage.dateDepart|date('H:i') }}
+                            </p>
+                        </div>
+
+                        {# Badge écologique #}
+                        {% if covoiturage.ecologique %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-leaf me-1"></i>Écologique
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="d-flex gap-3">
+                            {# Places restantes #}
+                            <span class="text-muted small">
+                                <i class="bi bi-person me-1"></i>
+                                {{ covoiturage.placesRestantes }} place{{ covoiturage.placesRestantes > 1 ? 's' : '' }}
+                            </span>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            {# Prix #}
+                            <span class="fw-bold text-dark-green fs-5">
+                                {{ covoiturage.prix|number_format(0, ',', ' ') }} crédits
+                            </span>
+
+                            {# Bouton détail #}
+                            <a href="{{ path('app_covoiturage_detail', {'id': covoiturage.id}) }}" 
+                               class="btn btn-outline-success btn-sm">
+                                Détail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
