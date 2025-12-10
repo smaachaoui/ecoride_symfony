@@ -1,17 +1,31 @@
-
-###> symfony/framework-bundle ###
-/.env.local
-/.env.local.php
-/.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
-/var/
+# Dépendances
 /vendor/
-###< symfony/framework-bundle ###
-
-###> symfony/webpack-encore-bundle ###
 /node_modules/
+
+# Build assets (regénérés avec npm run build)
 /public/build/
-npm-debug.log
-yarn-error.log
-###< symfony/webpack-encore-bundle ###
+
+# Fichiers d'environnement locaux
+.env.local
+.env.local.php
+.env.*.local
+
+# Cache et logs Symfony
+/var/
+
+# PHPUnit
+.phpunit.result.cache
+/phpunit.xml
+
+# IDE
+/.idea/
+/.vscode/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads utilisateurs (optionnel - à toi de décider)
+/public/uploads/*
+!/public/uploads/.gitkeep
