@@ -1,0 +1,346 @@
+{# Template pour les demandes de trajets #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-envelope me-2"></i>Mes demandes
+    </h1>
+</div>
+
+{# Navigation sous-onglets #}
+<ul class="nav nav-pills mb-4" id="demandesTab" role="tablist">
+    {# Onglet demandes envoyées - visible pour PASSAGER et CHAUFFEUR_PASSAGER #}
+    {% if app.user.role == 'PASSAGER' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="envoyees-tab" data-bs-toggle="pill" 
+                    data-bs-target="#envoyees" type="button" role="tab">
+                <i class="bi bi-send me-1"></i>Demandes envoyées
+                {% if participationsEnAttente|length > 0 %}
+                    <span class="badge bg-warning text-dark ms-1">{{ participationsEnAttente|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+    {% endif %}
+
+    {# Onglet demandes reçues - visible pour CHAUFFEUR et CHAUFFEUR_PASSAGER #}
+    {% if app.user.role == 'CHAUFFEUR' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {{ app.user.role == 'CHAUFFEUR' ? 'active' : '' }}" id="recues-tab" data-bs-toggle="pill" 
+                    data-bs-target="#recues" type="button" role="tab">
+                <i class="bi bi-inbox me-1"></i>Demandes reçues
+                {% if demandesEnAttente|length > 0 %}
+                    <span class="badge bg-danger ms-1">{{ demandesEnAttente|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+    {% endif %}
+
+    {# Onglet trajets confirmés - visible pour tous #}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="confirmes-tab" data-bs-toggle="pill" 
+                data-bs-target="#confirmes" type="button" role="tab">
+            <i class="bi bi-check-circle me-1"></i>Trajets confirmés
+            {% if participationsAcceptees|length > 0 %}
+                <span class="badge bg-success ms-1">{{ participationsAcceptees|length }}</span>
+            {% endif %}
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="demandesTabContent">
+
+    {# ========== DEMANDES ENVOYÉES (Passager) ========== #}
+    {% if app.user.role == 'PASSAGER' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+        <div class="tab-pane fade show active" id="envoyees" role="tabpanel">
+            {% if participationsEnAttente|length > 0 %}
+                <div class="row g-4">
+                    {% for participation in participationsEnAttente %}
+                        {% set covoit = participation.covoiturageId %}
+                        {% set chauffeur = covoit.utilisateurId %}
+                        
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm border-start border-warning border-4">
+                                <div class="card-body p-4">
+                                    <div class="row align-items-center">
+                                        {# Infos trajet #}
+                                        <div class="col-lg-5 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h5 class="mb-0">
+                                                    {{ covoit.villeDepart }}
+                                                    <i class="bi bi-arrow-right mx-2 text-medium-green"></i>
+                                                    {{ covoit.villeArrivee }}
+                                                </h5>
+                                                {% if covoit.ecologique %}
+                                                    <span class="badge bg-success ms-2">
+                                                        <i class="bi bi-leaf me-1"></i>Éco
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <p class="text-muted mb-0 small">
+                                                <i class="bi bi-calendar me-1"></i>{{ covoit.dateDepart|date('d/m/Y') }}
+                                                <i class="bi bi-clock ms-2 me-1"></i>{{ covoit.dateDepart|date('H:i') }}
+                                            </p>
+                                        </div>
+
+                                        {# Infos chauffeur #}
+                                        <div class="col-lg-3 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center">
+                                                {% if chauffeur.photo %}
+                                                    <img src="{{ asset('uploads/photos/' ~ chauffeur.photo) }}" 
+                                                         alt="{{ chauffeur.pseudo }}" 
+                                                         class="rounded-circle me-2"
+                                                         width="40" height="40"
+                                                         style="object-fit: cover;">
+                                                {% else %}
+                                                    <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-person text-dark-green"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <p class="mb-0 small text-muted">Chauffeur</p>
+                                                    <p class="mb-0 fw-medium">{{ chauffeur.pseudo }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {# Statut et actions #}
+                                        <div class="col-lg-4">
+                                            <div class="d-flex align-items-center justify-content-lg-end gap-3">
+                                                <div class="text-end">
+                                                    <p class="mb-0 small text-muted">Statut</p>
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-hourglass-split me-1"></i>En attente
+                                                    </span>
+                                                </div>
+                                                <div class="text-end">
+                                                    <p class="mb-0 small text-muted">Prix</p>
+                                                    <p class="mb-0 fw-bold text-dark-green">
+                                                        <i class="bi bi-coin me-1"></i>{{ participation.creditsUtilises }}
+                                                    </p>
+                                                </div>
+                                                <form action="{{ path('app_covoiturage_annuler', {'id': covoit.id}) }}" method="POST">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('annuler_' ~ covoit.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="return confirm('Êtes-vous sûr de vouloir annuler cette demande ?')">
+                                                        <i class="bi bi-x-circle me-1"></i>Annuler
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <i class="bi bi-send text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-dark-green">Aucune demande en attente</h5>
+                        <p class="text-muted">Vous n'avez pas de demande de participation en cours.</p>
+                        <a href="{{ path('app_covoiturages') }}" class="btn btn-primary">
+                            <i class="bi bi-search me-1"></i>Rechercher un covoiturage
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# ========== DEMANDES REÇUES (Chauffeur) ========== #}
+    {% if app.user.role == 'CHAUFFEUR' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+        <div class="tab-pane fade {{ app.user.role == 'CHAUFFEUR' ? 'show active' : '' }}" id="recues" role="tabpanel">
+            {% if demandesEnAttente|length > 0 %}
+                <div class="row g-4">
+                    {% for participation in demandesEnAttente %}
+                        {% set covoit = participation.covoiturageId %}
+                        {% set passager = participation.utilisateurId %}
+                        
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm border-start border-danger border-4">
+                                <div class="card-body p-4">
+                                    <div class="row align-items-center">
+                                        {# Infos trajet #}
+                                        <div class="col-lg-4 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h5 class="mb-0">
+                                                    {{ covoit.villeDepart }}
+                                                    <i class="bi bi-arrow-right mx-2 text-medium-green"></i>
+                                                    {{ covoit.villeArrivee }}
+                                                </h5>
+                                            </div>
+                                            <p class="text-muted mb-0 small">
+                                                <i class="bi bi-calendar me-1"></i>{{ covoit.dateDepart|date('d/m/Y') }}
+                                                <i class="bi bi-clock ms-2 me-1"></i>{{ covoit.dateDepart|date('H:i') }}
+                                            </p>
+                                            <p class="text-muted mb-0 small">
+                                                <i class="bi bi-people me-1"></i>{{ covoit.placesRestantes }} place(s) restante(s)
+                                            </p>
+                                        </div>
+
+                                        {# Infos passager #}
+                                        <div class="col-lg-3 mb-3 mb-lg-0">
+                                            <div class="d-flex align-items-center">
+                                                {% if passager.photo %}
+                                                    <img src="{{ asset('uploads/photos/' ~ passager.photo) }}" 
+                                                         alt="{{ passager.pseudo }}" 
+                                                         class="rounded-circle me-2"
+                                                         width="40" height="40"
+                                                         style="object-fit: cover;">
+                                                {% else %}
+                                                    <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-person text-dark-green"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <p class="mb-0 small text-muted">Passager</p>
+                                                    <p class="mb-0 fw-medium">{{ passager.pseudo }}</p>
+                                                    <p class="mb-0 small text-muted">
+                                                        <i class="bi bi-coin me-1"></i>{{ passager.credits }} crédits
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {# Prix #}
+                                        <div class="col-lg-2 mb-3 mb-lg-0 text-center">
+                                            <p class="mb-0 small text-muted">Prix</p>
+                                            <p class="mb-0 fw-bold text-dark-green fs-5">
+                                                <i class="bi bi-coin me-1"></i>{{ participation.creditsUtilises }}
+                                            </p>
+                                        </div>
+
+                                        {# Actions #}
+                                        <div class="col-lg-3">
+                                            <div class="d-flex gap-2 justify-content-lg-end">
+                                                <form action="{{ path('app_espace_participation_accepter', {'id': participation.id}) }}" method="POST">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('accepter_' ~ participation.id) }}">
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="bi bi-check-circle me-1"></i>Accepter
+                                                    </button>
+                                                </form>
+                                                <form action="{{ path('app_espace_participation_refuser', {'id': participation.id}) }}" method="POST">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('refuser_' ~ participation.id) }}">
+                                                    <button type="submit" class="btn btn-outline-danger"
+                                                            onclick="return confirm('Êtes-vous sûr de vouloir refuser cette demande ?')">
+                                                        <i class="bi bi-x-circle me-1"></i>Refuser
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-dark-green">Aucune demande reçue</h5>
+                        <p class="text-muted">Vous n'avez pas de demande de participation à traiter.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# ========== TRAJETS CONFIRMÉS ========== #}
+    <div class="tab-pane fade" id="confirmes" role="tabpanel">
+        {% if participationsAcceptees|length > 0 %}
+            <div class="row g-4">
+                {% for participation in participationsAcceptees %}
+                    {% set covoit = participation.covoiturageId %}
+                    {% set chauffeur = covoit.utilisateurId %}
+                    
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm border-start border-success border-4">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    {# Infos trajet #}
+                                    <div class="col-lg-5 mb-3 mb-lg-0">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h5 class="mb-0">
+                                                {{ covoit.villeDepart }}
+                                                <i class="bi bi-arrow-right mx-2 text-medium-green"></i>
+                                                {{ covoit.villeArrivee }}
+                                            </h5>
+                                            {% if covoit.ecologique %}
+                                                <span class="badge bg-success ms-2">
+                                                    <i class="bi bi-leaf me-1"></i>Éco
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-muted mb-0 small">
+                                            <i class="bi bi-calendar me-1"></i>{{ covoit.dateDepart|date('d/m/Y') }}
+                                            <i class="bi bi-clock ms-2 me-1"></i>{{ covoit.dateDepart|date('H:i') }}
+                                        </p>
+                                    </div>
+
+                                    {# Infos chauffeur #}
+                                    <div class="col-lg-3 mb-3 mb-lg-0">
+                                        <div class="d-flex align-items-center">
+                                            {% if chauffeur.photo %}
+                                                <img src="{{ asset('uploads/photos/' ~ chauffeur.photo) }}" 
+                                                     alt="{{ chauffeur.pseudo }}" 
+                                                     class="rounded-circle me-2"
+                                                     width="40" height="40"
+                                                     style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person text-dark-green"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <p class="mb-0 small text-muted">Chauffeur</p>
+                                                <p class="mb-0 fw-medium">{{ chauffeur.pseudo }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {# Statut et crédits #}
+                                    <div class="col-lg-4">
+                                        <div class="d-flex align-items-center justify-content-lg-end gap-3">
+                                            <div class="text-end">
+                                                <p class="mb-0 small text-muted">Statut</p>
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Confirmé
+                                                </span>
+                                            </div>
+                                            <div class="text-end">
+                                                <p class="mb-0 small text-muted">Crédits utilisés</p>
+                                                <p class="mb-0 fw-bold text-dark-green">
+                                                    <i class="bi bi-coin me-1"></i>{{ participation.creditsUtilises }}
+                                                </p>
+                                            </div>
+                                            <a href="{{ path('app_covoiturage_detail', {'id': covoit.id}) }}" 
+                                               class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-eye me-1"></i>Détail
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <i class="bi bi-check-circle text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-dark-green">Aucun trajet confirmé</h5>
+                    <p class="text-muted">Vous n'avez pas de trajet confirmé à venir.</p>
+                    <a href="{{ path('app_covoiturages') }}" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Rechercher un covoiturage
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>

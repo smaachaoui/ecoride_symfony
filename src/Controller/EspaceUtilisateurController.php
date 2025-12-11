@@ -32,10 +32,7 @@ class EspaceUtilisateurController extends AbstractController
         $participationsPassees = $participationRepository->findParticipationsPassees($user);
 
         // Participations en attente (demandes envoyées par l'utilisateur)
-        $participationsEnAttente = $participationRepository->findBy([
-            'utilisateur_id' => $user,
-            'statut' => 'en_attente',
-        ]);
+        $participationsEnAttente = $participationRepository->findParticipationsEnAttente($user);
 
         // Participations acceptées à venir
         $participationsAcceptees = $participationRepository->findParticipationsAcceptees($user);
@@ -43,12 +40,14 @@ class EspaceUtilisateurController extends AbstractController
         // Covoiturages passés (en tant que chauffeur)
         $covoituragesPasses = [];
         $demandesEnAttente = [];
+        $nbDemandesRecues = 0;
         
         if ($user->isChauffeur()) {
             $covoituragesPasses = $covoiturageRepository->findCovoituragesPasses($user);
             
             // Demandes de participation en attente pour les covoiturages du chauffeur
             $demandesEnAttente = $participationRepository->findDemandesEnAttentePourChauffeur($user);
+            $nbDemandesRecues = count($demandesEnAttente);
         }
 
         // Récupérer les avis déjà laissés par l'utilisateur
@@ -65,6 +64,7 @@ class EspaceUtilisateurController extends AbstractController
             'covoituragesPasses' => $covoituragesPasses,
             'covoituragesNotes' => $covoituragesNotes,
             'demandesEnAttente' => $demandesEnAttente,
+            'nbDemandesRecues' => $nbDemandesRecues,
         ]);
     }
 
@@ -117,12 +117,18 @@ class EspaceUtilisateurController extends AbstractController
         // Débiter les crédits du passager
         $passager->setCredits($passager->getCredits() - $prixCovoiturage);
 
+        // Créditer le chauffeur (prix - 2 crédits pour la plateforme)
+        $gainChauffeur = $prixCovoiturage - 2;
+        if ($gainChauffeur > 0) {
+            $user->setCredits($user->getCredits() + $gainChauffeur);
+        }
+
         // Décrémenter les places restantes
         $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() - 1);
 
         $entityManager->flush();
 
-        $this->addFlash('success', 'La demande de ' . $passager->getPseudo() . ' a été acceptée.');
+        $this->addFlash('success', 'La demande de ' . $passager->getPseudo() . ' a été acceptée. Vous avez reçu ' . $gainChauffeur . ' crédits.');
 
         return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
     }

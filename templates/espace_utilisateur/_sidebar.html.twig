@@ -69,6 +69,20 @@
                 </a>
             {% endif %}
 
+            {# Onglet Mes demandes - visible pour tous #}
+            <a class="nav-link py-3 px-4 border-bottom text-dark" 
+                id="tab-demandes"
+                data-bs-toggle="tab" 
+                data-bs-target="#demandes" 
+                role="tab"
+                aria-controls="demandes"
+                aria-selected="false">
+                <i class="bi bi-envelope me-2"></i>Mes demandes
+                {% if nbDemandesRecues is defined and nbDemandesRecues > 0 %}
+                    <span class="badge bg-danger float-end">{{ nbDemandesRecues }}</span>
+                {% endif %}
+            </a>
+
             {% if app.user.isChauffeur %}
                 <a class="nav-link py-3 px-4 border-bottom text-dark" 
                     id="tab-vehicules"
