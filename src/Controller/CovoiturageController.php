@@ -88,13 +88,19 @@ class CovoiturageController extends AbstractController
     {
         // Vérifier si l'utilisateur participe déjà
         $dejaParticipant = false;
+        $participationEnAttente = false;
         $estChauffeur = false;
         
         if ($this->getUser()) {
-            $dejaParticipant = $participationRepository->findOneBy([
+            $participation = $participationRepository->findOneBy([
                 'utilisateur_id' => $this->getUser(),
                 'covoiturage_id' => $covoiturage,
-            ]) !== null;
+            ]);
+            
+            if ($participation) {
+                $dejaParticipant = true;
+                $participationEnAttente = $participation->isEnAttente();
+            }
             
             $estChauffeur = $covoiturage->getUtilisateurId() === $this->getUser();
         }
@@ -102,6 +108,7 @@ class CovoiturageController extends AbstractController
         return $this->render('covoiturage/detail.html.twig', [
             'covoiturage' => $covoiturage,
             'dejaParticipant' => $dejaParticipant,
+            'participationEnAttente' => $participationEnAttente,
             'estChauffeur' => $estChauffeur,
         ]);
     }
@@ -132,9 +139,10 @@ class CovoiturageController extends AbstractController
             // Associer le chauffeur
             $covoiturage->setUtilisateurId($user);
 
-            // Déterminer si le voyage est écologique (véhicule électrique)
+            // Déterminer si le voyage est écologique (véhicule électrique ou hybride)
             $vehicule = $covoiturage->getVehiculeId();
-            $covoiturage->setEcologique($vehicule->getEnergie() === 'Electrique');
+            $energie = $vehicule->getEnergie();
+            $covoiturage->setEcologique($energie === 'Electrique' || $energie === 'Hybride');
 
             $entityManager->persist($covoiturage);
             $entityManager->flush();
@@ -172,7 +180,8 @@ class CovoiturageController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // Mettre à jour le statut écologique
             $vehicule = $covoiturage->getVehiculeId();
-            $covoiturage->setEcologique($vehicule->getEnergie() === 'Electrique');
+            $energie = $vehicule->getEnergie();
+            $covoiturage->setEcologique($energie === 'Electrique' || $energie === 'Hybride');
 
             $entityManager->flush();
 
@@ -209,7 +218,7 @@ class CovoiturageController extends AbstractController
         ]);
 
         if ($participationExistante) {
-            $this->addFlash('warning', 'Vous participez déjà à ce covoiturage.');
+            $this->addFlash('warning', 'Vous avez déjà une demande de participation pour ce covoiturage.');
             return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
         }
 
@@ -261,7 +270,7 @@ class CovoiturageController extends AbstractController
         ]);
 
         if ($participationExistante) {
-            $this->addFlash('warning', 'Vous participez déjà à ce covoiturage.');
+            $this->addFlash('warning', 'Vous avez déjà une demande de participation pour ce covoiturage.');
             return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
         }
 
@@ -278,24 +287,60 @@ class CovoiturageController extends AbstractController
             return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
         }
 
-        // Créer la participation
+        // Créer la participation avec statut EN ATTENTE (pas de débit immédiat)
         $participation = new Participation();
         $participation->setUtilisateurId($user);
         $participation->setCovoiturageId($covoiturage);
-        $participation->setConfirme(true);
+        $participation->setStatut('en_attente');
         $participation->setCreditsUtilises($prixCovoiturage);
 
-        // Mettre à jour les crédits de l'utilisateur
-        $user->setCredits($user->getCredits() - $prixCovoiturage);
-
-        // Mettre à jour les places restantes
-        $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() - 1);
-
-        // Persister les changements
+        // Persister la participation (sans débiter les crédits ni décrémenter les places)
         $entityManager->persist($participation);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Votre participation a été confirmée ! ' . $prixCovoiturage . ' crédits ont été débités de votre compte.');
+        $this->addFlash('success', 'Votre demande de participation a été envoyée au chauffeur. Vous serez notifié de sa décision.');
+
+        return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+    }
+
+    #[Route('/covoiturage/{id}/annuler-participation', name: 'app_covoiturage_annuler', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function annulerParticipation(
+        Request $request,
+        Covoiturage $covoiturage,
+        ParticipationRepository $participationRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $this->getUser();
+
+        // Vérification CSRF
+        if (!$this->isCsrfTokenValid('annuler_' . $covoiturage->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Trouver la participation
+        $participation = $participationRepository->findOneBy([
+            'utilisateur_id' => $user,
+            'covoiturage_id' => $covoiturage,
+        ]);
+
+        if (!$participation) {
+            $this->addFlash('danger', 'Participation introuvable.');
+            return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        }
+
+        // Si la participation était acceptée, rembourser les crédits et libérer la place
+        if ($participation->isAccepte()) {
+            $user->setCredits($user->getCredits() + $participation->getCreditsUtilises());
+            $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() + 1);
+        }
+
+        // Supprimer la participation
+        $entityManager->remove($participation);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre participation a été annulée.');
 
         return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
     }

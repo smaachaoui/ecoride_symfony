@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Avis;
 use App\Entity\Vehicule;
 use App\Entity\Preferences;
+use App\Entity\Participation;
 use App\Repository\AvisRepository;
 use App\Repository\CovoiturageRepository;
 use App\Repository\ParticipationRepository;
@@ -27,13 +28,27 @@ class EspaceUtilisateurController extends AbstractController
     ): Response {
         $user = $this->getUser();
 
-        // Participations passées (en tant que passager)
+        // Participations passées (en tant que passager) - seulement les acceptées
         $participationsPassees = $participationRepository->findParticipationsPassees($user);
+
+        // Participations en attente (demandes envoyées par l'utilisateur)
+        $participationsEnAttente = $participationRepository->findBy([
+            'utilisateur_id' => $user,
+            'statut' => 'en_attente',
+        ]);
+
+        // Participations acceptées à venir
+        $participationsAcceptees = $participationRepository->findParticipationsAcceptees($user);
 
         // Covoiturages passés (en tant que chauffeur)
         $covoituragesPasses = [];
+        $demandesEnAttente = [];
+        
         if ($user->isChauffeur()) {
             $covoituragesPasses = $covoiturageRepository->findCovoituragesPasses($user);
+            
+            // Demandes de participation en attente pour les covoiturages du chauffeur
+            $demandesEnAttente = $participationRepository->findDemandesEnAttentePourChauffeur($user);
         }
 
         // Récupérer les avis déjà laissés par l'utilisateur
@@ -45,9 +60,109 @@ class EspaceUtilisateurController extends AbstractController
 
         return $this->render('espace_utilisateur/index.html.twig', [
             'participationsPassees' => $participationsPassees,
+            'participationsEnAttente' => $participationsEnAttente,
+            'participationsAcceptees' => $participationsAcceptees,
             'covoituragesPasses' => $covoituragesPasses,
             'covoituragesNotes' => $covoituragesNotes,
+            'demandesEnAttente' => $demandesEnAttente,
         ]);
+    }
+
+    #[Route('/participation/{id}/accepter', name: 'app_espace_participation_accepter', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function accepterParticipation(
+        Participation $participation,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $this->getUser();
+        $covoiturage = $participation->getCovoiturageId();
+
+        // Vérifier que l'utilisateur est le chauffeur de ce covoiturage
+        if ($covoiturage->getUtilisateurId() !== $user) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas gérer cette demande.');
+        }
+
+        // Vérifier le token CSRF
+        if (!$this->isCsrfTokenValid('accepter_' . $participation->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        // Vérifier que la participation est en attente
+        if (!$participation->isEnAttente()) {
+            $this->addFlash('warning', 'Cette demande a déjà été traitée.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        // Vérifier qu'il reste des places
+        if ($covoiturage->getPlacesRestantes() <= 0) {
+            $this->addFlash('danger', 'Il n\'y a plus de places disponibles pour ce covoiturage.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        $passager = $participation->getUtilisateurId();
+        $prixCovoiturage = $participation->getCreditsUtilises();
+
+        // Vérifier que le passager a toujours assez de crédits
+        if ($passager->getCredits() < $prixCovoiturage) {
+            $this->addFlash('danger', 'Le passager n\'a plus assez de crédits. La demande a été refusée automatiquement.');
+            $participation->setStatut('refuse');
+            $entityManager->flush();
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        // Accepter la participation
+        $participation->setStatut('accepte');
+
+        // Débiter les crédits du passager
+        $passager->setCredits($passager->getCredits() - $prixCovoiturage);
+
+        // Décrémenter les places restantes
+        $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() - 1);
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La demande de ' . $passager->getPseudo() . ' a été acceptée.');
+
+        return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+    }
+
+    #[Route('/participation/{id}/refuser', name: 'app_espace_participation_refuser', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function refuserParticipation(
+        Participation $participation,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $user = $this->getUser();
+        $covoiturage = $participation->getCovoiturageId();
+
+        // Vérifier que l'utilisateur est le chauffeur de ce covoiturage
+        if ($covoiturage->getUtilisateurId() !== $user) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas gérer cette demande.');
+        }
+
+        // Vérifier le token CSRF
+        if (!$this->isCsrfTokenValid('refuser_' . $participation->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        // Vérifier que la participation est en attente
+        if (!$participation->isEnAttente()) {
+            $this->addFlash('warning', 'Cette demande a déjà été traitée.');
+            return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
+        }
+
+        $passager = $participation->getUtilisateurId();
+
+        // Refuser la participation (pas de débit de crédits)
+        $participation->setStatut('refuse');
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La demande de ' . $passager->getPseudo() . ' a été refusée.');
+
+        return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
     }
 
     #[Route('/avis/{id}', name: 'app_espace_avis', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -74,10 +189,11 @@ class EspaceUtilisateurController extends AbstractController
             return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'historique']);
         }
 
-        // Vérifier que l'utilisateur a participé à ce covoiturage
+        // Vérifier que l'utilisateur a participé à ce covoiturage (et que c'était accepté)
         $participation = $participationRepository->findOneBy([
             'utilisateur_id' => $user,
             'covoiturage_id' => $covoiturage,
+            'statut' => 'accepte',
         ]);
 
         if (!$participation) {
@@ -287,6 +403,7 @@ class EspaceUtilisateurController extends AbstractController
 
         $preferences->setAccepteFumeurs($request->request->has('accepte_fumeurs'));
         $preferences->setAccepteAnimaux($request->request->has('accepte_animaux'));
+        $preferences->setPreferencesPersonnalisees($request->request->get('preferences_personnalisees'));
 
         $entityManager->persist($preferences);
         $entityManager->flush();
