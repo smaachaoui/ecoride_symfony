@@ -26,7 +26,7 @@ class Covoiturage
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $ville_arrivee = null;
-
+    
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $date_depart = null;
 

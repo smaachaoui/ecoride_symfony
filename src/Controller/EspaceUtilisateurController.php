@@ -203,6 +203,7 @@ class EspaceUtilisateurController extends AbstractController
         $vehicule->setUtilisateurId($user);
         $vehicule->setMarque($request->request->get('marque'));
         $vehicule->setModele($request->request->get('modele'));
+        $vehicule->setCouleur($request->request->get('couleur'));
         $vehicule->setImmatriculation(strtoupper($request->request->get('immatriculation')));
         $vehicule->setEnergie($request->request->get('energie'));
         $vehicule->setPlacesDisponibles((int) $request->request->get('places_disponibles'));
@@ -233,6 +234,7 @@ class EspaceUtilisateurController extends AbstractController
         $vehicule->setMarque($request->request->get('marque'));
         $vehicule->setModele($request->request->get('modele'));
         $vehicule->setImmatriculation(strtoupper($request->request->get('immatriculation')));
+        $vehicule->setCouleur($request->request->get('couleur'));
         $vehicule->setEnergie($request->request->get('energie'));
         $vehicule->setPlacesDisponibles((int) $request->request->get('places_disponibles'));
         $vehicule->setDatePremiereImmatriculation(new \DateTime($request->request->get('date_premiere_immatriculation')));

@@ -36,6 +36,9 @@ class Vehicule
     #[ORM\Column]
     private ?int $places_disponibles = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $couleur = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -122,6 +125,17 @@ class Vehicule
     {
         $this->places_disponibles = $places_disponibles;
 
+        return $this;
+    }
+
+    public function getCouleur(): ?string
+    {
+        return $this->couleur;
+    }
+
+    public function setCouleur(?string $couleur): static
+    {
+        $this->couleur = $couleur;
         return $this;
     }
 }
