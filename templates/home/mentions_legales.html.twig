@@ -1,0 +1,132 @@
+{# PAGE MENTIONS_LEGALES #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Mentions légales - EcoRide{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="text-dark-green mb-4">Mentions légales</h1>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">1. Éditeur du site</h2>
+                    <p>
+                        <strong>EcoRide</strong><br>
+                        Société par Actions Simplifiée (SAS)<br>
+                        Capital social : 10 000 €<br>
+                        Siège social : 123 Avenue de l'Écologie, 75001 Paris, France<br>
+                        RCS Paris : 123 456 789<br>
+                        N° TVA intracommunautaire : FR 12 345678901
+                    </p>
+                    <p>
+                        <strong>Directeur de la publication :</strong> Walter white<br>
+                        <strong>Contact :</strong> <a href="mailto:contact@ecoride.fr" class="text-medium-green">contact@ecoride.fr</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">2. Hébergement</h2>
+                    <p>
+                        Le site EcoRide est hébergé par :<br>
+                        <strong>Ecogreen</strong><br>
+                        23 Boulevard de Paris<br>
+                        +33-XX-XX-XX-XX-XX
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">3. Propriété intellectuelle</h2>
+                    <p>
+                        L'ensemble du contenu de ce site (textes, images, logos, icônes, sons, logiciels, etc.) 
+                        est la propriété exclusive d'EcoRide ou de ses partenaires et est protégé par les lois 
+                        françaises et internationales relatives à la propriété intellectuelle.
+                    </p>
+                    <p>
+                        Toute reproduction, représentation, modification, publication, adaptation de tout ou 
+                        partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, 
+                        sauf autorisation écrite préalable d'EcoRide.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">4. Protection des données personnelles</h2>
+                    <p>
+                        Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi 
+                        Informatique et Libertés du 6 janvier 1978 modifiée, vous disposez des droits suivants 
+                        concernant vos données personnelles :
+                    </p>
+                    <ul>
+                        <li>Droit d'accès</li>
+                        <li>Droit de rectification</li>
+                        <li>Droit à l'effacement</li>
+                        <li>Droit à la limitation du traitement</li>
+                        <li>Droit à la portabilité des données</li>
+                        <li>Droit d'opposition</li>
+                    </ul>
+                    <p>
+                        Pour exercer ces droits, vous pouvez nous contacter à l'adresse : 
+                        <a href="mailto:dpo@ecoride.fr" class="text-medium-green">dpo@ecoride.fr</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">5. Cookies</h2>
+                    <p>
+                        Le site EcoRide utilise des cookies pour améliorer l'expérience utilisateur et 
+                        analyser le trafic. En continuant à naviguer sur ce site, vous acceptez l'utilisation 
+                        de cookies conformément à notre politique de confidentialité.
+                    </p>
+                    <p>
+                        Vous pouvez configurer votre navigateur pour refuser les cookies ou être alerté 
+                        lorsqu'un cookie est envoyé.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">6. Limitation de responsabilité</h2>
+                    <p>
+                        EcoRide s'efforce de fournir des informations aussi précises que possible. Toutefois, 
+                        EcoRide ne pourra être tenu responsable des omissions, inexactitudes ou carences dans 
+                        la mise à jour des informations.
+                    </p>
+                    <p>
+                        EcoRide décline toute responsabilité en cas de problèmes rencontrés lors des 
+                        covoiturages organisés via la plateforme. Les utilisateurs sont seuls responsables 
+                        de leurs interactions et transactions.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h4 text-medium-green mb-3">7. Droit applicable</h2>
+                    <p>
+                        Les présentes mentions légales sont soumises au droit français. En cas de litige, 
+                        et après échec de toute tentative de recherche d'une solution amiable, les tribunaux 
+                        français seront seuls compétents pour connaître de ce litige.
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ path('app_home') }}" class="btn btn-outline-success">
+                    <i class="bi bi-arrow-left me-2"></i>Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
