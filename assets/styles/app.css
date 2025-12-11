@@ -25,7 +25,7 @@ body {
    ============================================ */
 
 .bg-dark-green {
-    background-color: var(--dark-green) !important;
+    background-color: #114B1E !important;
 }
 
 .bg-medium-green {
@@ -97,13 +97,56 @@ body {
    Navbar
    ============================================ */
 
+/* Liens de navigation */
+.navbar-dark .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
 .navbar .nav-link.active {
-    color: var(--medium-green) !important;
+    color: #ffffff !important;
     font-weight: 500;
 }
 
-.navbar .nav-link:hover {
-    color: var(--medium-green) !important;
+.navbar-dark .nav-link.active,
+.navbar-dark .nav-link:focus {
+    color: #23953C !important;
+    font-weight: 600;
+    background: none !important;
+}
+
+.logo-circle {
+    background-color: white;
+    border-radius: 50%;
+    padding: 5px;
+}
+
+/* Bouton Inscription */
+.navbar .btn-primary {
+    background-color: #23953C;
+    border-color: #23953C;
+    color: white;
+}
+
+.navbar .btn-primary:hover {
+    background-color: #C7FBD3;
+    border-color: #C7FBD3;
+    color: #114B1E;
+}
+
+/* Dropdown menu */
+.navbar .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.navbar .dropdown-item:hover {
+    background-color: #C7FBD3;
+    color: #114B1E;
+}
+
+/* Icône utilisateur */
+.navbar-dark .dropdown-toggle i {
+    color: #C7FBD3;
 }
 
 /* ============================================
