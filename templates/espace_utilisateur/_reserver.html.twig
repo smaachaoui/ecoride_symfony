@@ -1,0 +1,145 @@
+{# templates/espace_utilisateur/_reserver.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-search me-2"></i>Réserver un trajet
+    </h1>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <form action="{{ path('app_covoiturages') }}" method="GET">
+            <div class="row">
+                {# Ville de départ #}
+                <div class="col-md-4 mb-3">
+                    <label for="ville_depart" class="form-label">
+                        <i class="bi bi-geo-alt text-medium-green me-1"></i>Ville de départ
+                    </label>
+                    <input type="text" class="form-control" id="ville_depart" name="ville_depart" 
+                           placeholder="Ex: Paris">
+                </div>
+
+                {# Ville d'arrivée #}
+                <div class="col-md-4 mb-3">
+                    <label for="ville_arrivee" class="form-label">
+                        <i class="bi bi-geo-alt-fill text-medium-green me-1"></i>Ville d'arrivée
+                    </label>
+                    <input type="text" class="form-control" id="ville_arrivee" name="ville_arrivee" 
+                           placeholder="Ex: Lyon">
+                </div>
+
+                {# Date #}
+                <div class="col-md-4 mb-3">
+                    <label for="date" class="form-label">
+                        <i class="bi bi-calendar-event text-medium-green me-1"></i>Date
+                    </label>
+                    <input type="date" class="form-control" id="date" name="date" 
+                           min="{{ 'now'|date('Y-m-d') }}">
+                </div>
+            </div>
+
+            {# Filtres avancés #}
+            <div class="accordion mb-4" id="filtresAccordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed bg-light" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#filtresAvances">
+                            <i class="bi bi-sliders me-2"></i>Filtres avancés
+                        </button>
+                    </h2>
+                    <div id="filtresAvances" class="accordion-collapse collapse" data-bs-parent="#filtresAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                {# Voyage écologique #}
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ecologique" name="ecologique" value="1">
+                                        <label class="form-check-label" for="ecologique">
+                                            <i class="bi bi-leaf text-success me-1"></i>Voyage écologique uniquement
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {# Prix maximum #}
+                                <div class="col-md-4 mb-3">
+                                    <label for="prix_max" class="form-label">Prix maximum (crédits)</label>
+                                    <input type="number" class="form-control" id="prix_max" name="prix_max" 
+                                           min="1" placeholder="Ex: 50">
+                                </div>
+
+                                {# Note minimale #}
+                                <div class="col-md-4 mb-3">
+                                    <label for="note_min" class="form-label">Note minimale du chauffeur</label>
+                                    <select class="form-select" id="note_min" name="note_min">
+                                        <option value="">Peu importe</option>
+                                        <option value="3">3 étoiles et +</option>
+                                        <option value="4">4 étoiles et +</option>
+                                        <option value="5">5 étoiles</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-search me-2"></i>Rechercher
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# Section informative #}
+<div class="row mt-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-light-green d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <i class="bi bi-search text-dark-green fs-4"></i>
+                </div>
+                <h5 class="text-dark-green">1. Recherchez</h5>
+                <p class="text-muted mb-0 small">Entrez votre destination et trouvez les trajets disponibles.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-light-green d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <i class="bi bi-check-circle text-dark-green fs-4"></i>
+                </div>
+                <h5 class="text-dark-green">2. Réservez</h5>
+                <p class="text-muted mb-0 small">Choisissez votre trajet et confirmez votre participation.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-light-green d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 60px; height: 60px;">
+                    <i class="bi bi-car-front text-dark-green fs-4"></i>
+                </div>
+                <h5 class="text-dark-green">3. Voyagez</h5>
+                <p class="text-muted mb-0 small">Profitez de votre trajet et laissez un avis au chauffeur.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Crédits disponibles #}
+<div class="alert alert-info mt-4">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-coin fs-4 me-3"></i>
+        <div>
+            <strong>Vos crédits disponibles :</strong> {{ app.user.credits }} crédits
+            <br>
+            <small class="text-muted">Les crédits seront débités lors de la confirmation de votre participation.</small>
+        </div>
+    </div>
+</div>

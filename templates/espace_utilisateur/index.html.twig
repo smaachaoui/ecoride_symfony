@@ -1,49 +1,62 @@
 {# templates/espace_utilisateur/index.html.twig #}
-
 {% extends 'base.html.twig' %}
 
 {% block title %}Mon espace - EcoRide{% endblock %}
 
 {% block body %}
-    <section class="py-5 bg-light min-vh-100">
-        <div class="container">
-            <div class="row">
-                {# Sidebar #}
-                <div class="col-lg-3 mb-4 mb-lg-0">
-                    {% include 'espace_utilisateur/_sidebar.html.twig' %}
-                </div>
+<section class="py-5 bg-light min-vh-100">
+    <div class="container">
+        <div class="row">
+            {# Sidebar #}
+            <div class="col-lg-3 mb-4 mb-lg-0">
+                {% include 'espace_utilisateur/_sidebar.html.twig' %}
+            </div>
 
-                {# Contenu principal #}
-                <div class="col-lg-9">
-                    <div class="tab-content">
-                        {# Onglet Informations personnelles #}
-                        <div class="tab-pane fade show active" id="info" role="tabpanel">
-                            {% include 'espace_utilisateur/_info.html.twig' %}
+            {# Contenu principal #}
+            <div class="col-lg-9">
+                <div class="tab-content">
+                    {# Onglet Informations personnelles #}
+                    <div class="tab-pane fade show active" id="info" role="tabpanel">
+                        {% include 'espace_utilisateur/_info.html.twig' %}
+                    </div>
+
+                    {# Onglet Proposer un trajet #}
+                    {% if app.user.role == 'CHAUFFEUR' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+                        <div class="tab-pane fade" id="proposer" role="tabpanel">
+                            {% include 'espace_utilisateur/_proposer.html.twig' %}
                         </div>
+                    {% endif %}
 
-                        {# Onglet Mes véhicules #}
-                        {% if app.user.isChauffeur %}
-                            <div class="tab-pane fade" id="vehicules" role="tabpanel">
-                                {% include 'espace_utilisateur/_vehicules.html.twig' %}
-                            </div>
-                        {% endif %}
-
-                        {# Onglet Mes préférences #}
-                        {% if app.user.isChauffeur %}
-                            <div class="tab-pane fade" id="preferences" role="tabpanel">
-                                {% include 'espace_utilisateur/_preferences.html.twig' %}
-                            </div>
-                        {% endif %}
-
-                        {# Onglet Historique #}
-                        <div class="tab-pane fade" id="historique" role="tabpanel">
-                            {% include 'espace_utilisateur/_historique.html.twig' %}
+                    {# Onglet Réserver un trajet #}
+                    {% if app.user.role == 'PASSAGER' or app.user.role == 'CHAUFFEUR_PASSAGER' %}
+                        <div class="tab-pane fade" id="reserver" role="tabpanel">
+                            {% include 'espace_utilisateur/_reserver.html.twig' %}
                         </div>
+                    {% endif %}
+
+                    {# Onglet Mes véhicules #}
+                    {% if app.user.isChauffeur %}
+                        <div class="tab-pane fade" id="vehicules" role="tabpanel">
+                            {% include 'espace_utilisateur/_vehicules.html.twig' %}
+                        </div>
+                    {% endif %}
+
+                    {# Onglet Mes préférences #}
+                    {% if app.user.isChauffeur %}
+                        <div class="tab-pane fade" id="preferences" role="tabpanel">
+                            {% include 'espace_utilisateur/_preferences.html.twig' %}
+                        </div>
+                    {% endif %}
+
+                    {# Onglet Historique #}
+                    <div class="tab-pane fade" id="historique" role="tabpanel">
+                        {% include 'espace_utilisateur/_historique.html.twig' %}
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 {% endblock %}
 
 {% block javascripts %}

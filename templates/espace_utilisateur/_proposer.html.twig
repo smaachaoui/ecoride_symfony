@@ -1,0 +1,136 @@
+{# templates/espace_utilisateur/_proposer.html.twig #}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-dark-green mb-0">
+        <i class="bi bi-plus-circle me-2"></i>Proposer un trajet
+    </h1>
+</div>
+
+{% if app.user.vehicules|length > 0 %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form action="{{ path('app_covoiturage_creer') }}" method="POST">
+                <input type="hidden" name="_token" value="{{ csrf_token('creer_covoiturage') }}">
+
+                <div class="row">
+                    {# Ville de départ #}
+                    <div class="col-md-6 mb-3">
+                        <label for="ville_depart" class="form-label">
+                            <i class="bi bi-geo-alt text-medium-green me-1"></i>Ville de départ
+                        </label>
+                        <input type="text" class="form-control" id="ville_depart" name="ville_depart" 
+                               placeholder="Ex: Paris" required>
+                    </div>
+
+                    {# Ville d'arrivée #}
+                    <div class="col-md-6 mb-3">
+                        <label for="ville_arrivee" class="form-label">
+                            <i class="bi bi-geo-alt-fill text-medium-green me-1"></i>Ville d'arrivée
+                        </label>
+                        <input type="text" class="form-control" id="ville_arrivee" name="ville_arrivee" 
+                               placeholder="Ex: Lyon" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {# Date et heure de départ #}
+                    <div class="col-md-6 mb-3">
+                        <label for="date_depart" class="form-label">
+                            <i class="bi bi-calendar-event text-medium-green me-1"></i>Date et heure de départ
+                        </label>
+                        <input type="datetime-local" class="form-control" id="date_depart" name="date_depart" 
+                               min="{{ 'now'|date('Y-m-d\\TH:i') }}" required>
+                    </div>
+
+                    {# Prix #}
+                    <div class="col-md-6 mb-3">
+                        <label for="prix" class="form-label">
+                            <i class="bi bi-coin text-medium-green me-1"></i>Prix (crédits)
+                        </label>
+                        <input type="number" class="form-control" id="prix" name="prix" 
+                               min="3" value="5" required>
+                        <div class="form-text">Minimum 3 crédits (2 pour la plateforme + 1 pour vous)</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    {# Véhicule #}
+                    <div class="col-md-6 mb-3">
+                        <label for="vehicule" class="form-label">
+                            <i class="bi bi-car-front text-medium-green me-1"></i>Véhicule
+                        </label>
+                        <select class="form-select" id="vehicule" name="vehicule_id" required>
+                            <option value="">Sélectionner un véhicule...</option>
+                            {% for vehicule in app.user.vehicules %}
+                                <option value="{{ vehicule.id }}">
+                                    {{ vehicule.marque }} {{ vehicule.modele }} 
+                                    ({{ vehicule.immatriculation }}) 
+                                    - {{ vehicule.energie }}
+                                    {% if vehicule.energie == 'Electrique' or vehicule.energie == 'Hybride' %}
+                                        🌱
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {# Places disponibles #}
+                    <div class="col-md-6 mb-3">
+                        <label for="places" class="form-label">
+                            <i class="bi bi-people text-medium-green me-1"></i>Places disponibles
+                        </label>
+                        <input type="number" class="form-control" id="places" name="places_restantes" 
+                               min="1" max="8" value="3" required>
+                    </div>
+                </div>
+
+                {# Récapitulatif gains #}
+                <div class="alert alert-success mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <div>
+                            <strong>Votre gain estimé :</strong>
+                            <span id="gainEstime">3</span> crédits par passager
+                            <br>
+                            <small class="text-muted">
+                                (Prix - 2 crédits de commission plateforme)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Publier le trajet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+            <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 text-dark-green">Aucun véhicule enregistré</h5>
+            <p class="text-muted">Vous devez d'abord ajouter un véhicule pour proposer un trajet.</p>
+            <a href="#vehicules" class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#vehicules">
+                <i class="bi bi-plus-circle me-1"></i>Ajouter un véhicule
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const prixInput = document.getElementById('prix');
+        const gainEstime = document.getElementById('gainEstime');
+        
+        if (prixInput && gainEstime) {
+            prixInput.addEventListener('input', function() {
+                const prix = parseInt(this.value) || 0;
+                const gain = Math.max(0, prix - 2);
+                gainEstime.textContent = gain;
+            });
+        }
+    });
+</script>
