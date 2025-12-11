@@ -23,6 +23,9 @@ class Preferences
     #[ORM\Column]
     private ?bool $accepte_animaux = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $preferences_personnalisees = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -62,5 +65,16 @@ class Preferences
         $this->accepte_animaux = $accepte_animaux;
 
         return $this;
+    }
+
+    public function getPreferencesPersonnalisees(): ?string
+    {
+        return $this->preferences_personnalisees;
+    }
+
+    public function setPreferencesPersonnalisees(?string $preferences_personnalisees): static
+    {
+    $this->preferences_personnalisees = $preferences_personnalisees;
+    return $this;
     }
 }
