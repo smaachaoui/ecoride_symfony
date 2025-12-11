@@ -27,6 +27,9 @@ class Participation
     #[ORM\Column]
     private ?int $credits_utilises = null;
 
+    #[ORM\Column(type: 'string', columnDefinition: "ENUM('en_attente', 'accepte', 'refuse') DEFAULT 'en_attente'")]
+    private ?string $statut = 'en_attente';
+
     public function getId(): ?int
     {
         return $this->id;
@@ -79,4 +82,31 @@ class Participation
 
         return $this;
     }
+
+    public function getStatut(): ?string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): static
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    public function isEnAttente(): bool
+    {
+        return $this->statut === 'en_attente';
+    }
+
+    public function isAccepte(): bool
+    {
+        return $this->statut === 'accepte';
+    }
+
+    public function isRefuse(): bool
+    {
+        return $this->statut === 'refuse';
+    }
+
 }
