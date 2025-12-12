@@ -8,11 +8,13 @@
     {# Hero Section #}
     <section class="hero-section position-relative" style="background: url('{{ asset('images/sticker.jpg') }}') center/cover no-repeat;">
         <div class="hero-overlay"></div>
-        <div class="container position-relative z-index-1">
+        <div class="container position-relative" style="z-index: 2;">
             <div class="row min-vh-50 align-items-center py-5">
-                <div class="col-lg-8 mx-auto text-center text-white">
-                    <h1 class="display-4 fw-bold mb-3">Bienvenue sur EcoRide</h1>
-                    <p class="lead mb-4">Une conduite écologique et économique</p>
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="hero-content p-4 rounded" style="background: box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+                        <h1 class="display-4 fw-bold mb-3 text-white" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Bienvenue sur EcoRide</h1>
+                        <p class="lead mb-0 text-white" style="text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);">Une conduite écologique et économique</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -30,7 +32,9 @@
                             </h2>
                             
                             {{ form_start(form, {'attr': {'class': 'search-form'}}) }}
-                                <div class="row g-3 align-items-end">
+                                
+                                {# Ligne 1 : Villes et date #}
+                                <div class="row g-3 mb-3  justify-content-center">
                                     <div class="col-md-3">
                                         {{ form_label(form.ville_depart) }}
                                         {{ form_widget(form.ville_depart) }}
@@ -42,14 +46,25 @@
                                         {{ form_errors(form.ville_arrivee) }}
                                     </div>
                                     <div class="col-md-3">
-                                        {{ form_label(form.date) }}
-                                        {{ form_widget(form.date) }}
-                                        {{ form_errors(form.date) }}
+                                        {{ form_label(form.date_depart) }}
+                                        {{ form_widget(form.date_depart) }}
+                                        {{ form_errors(form.date_depart) }}
                                     </div>
-                                    <div class="col-md-3">
-                                        {{ form_widget(form.rechercher) }}
+                                    
+                                </div>
+
+                                {# Ligne 2 : Bouton centré #}
+                                <div class="row justify-content-center">
+                                    <div class="col-12 col-md-6 col-lg-2">
+                                        {{ form_widget(form.rechercher, {'attr': {'class': 'btn btn-primary w-100 py-2'}}) }}
                                     </div>
                                 </div>
+
+                                {# Cacher les champs de filtres avancés pour qu'ils ne s'affichent pas #}
+                                <div class="d-none">
+                                    {{ form_rest(form) }}
+                                </div>
+                                
                             {{ form_end(form) }}
                         </div>
                     </div>
@@ -92,7 +107,7 @@
                 <div class="col-md-4">
                     <div class="feature-card text-center p-4 h-100">
                         <div class="feature-icon mb-3">
-                            <i class="bi bi-leaf"></i>
+                           <i class="bi bi-ev-front"></i>
                         </div>
                         <h3 class="h5 text-dark-green">Écologique</h3>
                         <p class="text-muted mb-0">
