@@ -12,8 +12,8 @@
             <form action="{{ path('app_covoiturage_creer') }}" method="POST">
                 <input type="hidden" name="_token" value="{{ csrf_token('creer_covoiturage') }}">
 
+                {# Ligne 1 : Villes #}
                 <div class="row">
-                    {# Ville de départ #}
                     <div class="col-md-6 mb-3">
                         <label for="ville_depart" class="form-label">
                             <i class="bi bi-geo-alt text-medium-green me-1"></i>Ville de départ
@@ -21,8 +21,6 @@
                         <input type="text" class="form-control" id="ville_depart" name="ville_depart" 
                                placeholder="Ex: Paris" required>
                     </div>
-
-                    {# Ville d'arrivée #}
                     <div class="col-md-6 mb-3">
                         <label for="ville_arrivee" class="form-label">
                             <i class="bi bi-geo-alt-fill text-medium-green me-1"></i>Ville d'arrivée
@@ -32,17 +30,38 @@
                     </div>
                 </div>
 
+                {# Ligne 2 : Date et heure de départ / Date et heure d'arrivée #}
                 <div class="row">
-                    {# Date et heure de départ #}
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="date_depart" class="form-label">
-                            <i class="bi bi-calendar-event text-medium-green me-1"></i>Date et heure de départ
+                            <i class="bi bi-calendar-event text-medium-green me-1"></i>Date de départ
                         </label>
-                        <input type="datetime-local" class="form-control" id="date_depart" name="date_depart" 
-                               min="{{ 'now'|date('Y-m-d\\TH:i') }}" required>
+                        <input type="date" class="form-control" id="date_depart" name="date_depart" 
+                               min="{{ 'now'|date('Y-m-d') }}" required>
                     </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="heure_depart" class="form-label">
+                            <i class="bi bi-clock text-medium-green me-1"></i>Heure de départ
+                        </label>
+                        <input type="time" class="form-control" id="heure_depart" name="heure_depart" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="date_arrivee" class="form-label">
+                            <i class="bi bi-calendar-check text-medium-green me-1"></i>Date d'arrivée
+                        </label>
+                        <input type="date" class="form-control" id="date_arrivee" name="date_arrivee" 
+                               min="{{ 'now'|date('Y-m-d') }}" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="heure_arrivee" class="form-label">
+                            <i class="bi bi-clock-fill text-medium-green me-1"></i>Heure d'arrivée
+                        </label>
+                        <input type="time" class="form-control" id="heure_arrivee" name="heure_arrivee" required>
+                    </div>
+                </div>
 
-                    {# Prix #}
+                {# Ligne 3 : Prix et Places #}
+                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="prix" class="form-label">
                             <i class="bi bi-coin text-medium-green me-1"></i>Prix (crédits)
@@ -51,11 +70,18 @@
                                min="3" value="5" required>
                         <div class="form-text">Minimum 3 crédits (2 pour la plateforme + 1 pour vous)</div>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="places" class="form-label">
+                            <i class="bi bi-people text-medium-green me-1"></i>Places disponibles
+                        </label>
+                        <input type="number" class="form-control" id="places" name="places_restantes" 
+                               min="1" max="8" value="3" required>
+                    </div>
                 </div>
 
+                {# Ligne 4 : Véhicule #}
                 <div class="row">
-                    {# Véhicule #}
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label for="vehicule" class="form-label">
                             <i class="bi bi-car-front text-medium-green me-1"></i>Véhicule
                         </label>
@@ -72,15 +98,6 @@
                                 </option>
                             {% endfor %}
                         </select>
-                    </div>
-
-                    {# Places disponibles #}
-                    <div class="col-md-6 mb-3">
-                        <label for="places" class="form-label">
-                            <i class="bi bi-people text-medium-green me-1"></i>Places disponibles
-                        </label>
-                        <input type="number" class="form-control" id="places" name="places_restantes" 
-                               min="1" max="8" value="3" required>
                     </div>
                 </div>
 
@@ -130,6 +147,19 @@
                 const prix = parseInt(this.value) || 0;
                 const gain = Math.max(0, prix - 2);
                 gainEstime.textContent = gain;
+            });
+        }
+
+        // Synchroniser la date d'arrivée avec la date de départ
+        const dateDepartInput = document.getElementById('date_depart');
+        const dateArriveeInput = document.getElementById('date_arrivee');
+        
+        if (dateDepartInput && dateArriveeInput) {
+            dateDepartInput.addEventListener('change', function() {
+                if (!dateArriveeInput.value || dateArriveeInput.value < this.value) {
+                    dateArriveeInput.value = this.value;
+                }
+                dateArriveeInput.min = this.value;
             });
         }
     });

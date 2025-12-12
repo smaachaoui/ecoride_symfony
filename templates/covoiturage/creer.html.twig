@@ -53,14 +53,38 @@
                                     </div>
                                 </div>
 
-                                {# Date et heure #}
+                                {# Date et heure de départ #}
                                 <h5 class="text-dark-green mb-3">
-                                    <i class="bi bi-calendar-event me-2"></i>Date et heure
+                                    <i class="bi bi-calendar-event me-2"></i>Départ
                                 </h5>
-                                <div class="mb-4">
-                                    {{ form_label(form.date_depart) }}
-                                    {{ form_widget(form.date_depart) }}
-                                    {{ form_errors(form.date_depart) }}
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.date_depart_jour) }}
+                                        {{ form_widget(form.date_depart_jour) }}
+                                        {{ form_errors(form.date_depart_jour) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.heure_depart) }}
+                                        {{ form_widget(form.heure_depart) }}
+                                        {{ form_errors(form.heure_depart) }}
+                                    </div>
+                                </div>
+
+                                {# Date et heure d'arrivée #}
+                                <h5 class="text-dark-green mb-3">
+                                    <i class="bi bi-calendar-check me-2"></i>Arrivée
+                                </h5>
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        {{ form_label(form.date_arrivee_jour) }}
+                                        {{ form_widget(form.date_arrivee_jour) }}
+                                        {{ form_errors(form.date_arrivee_jour) }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form_label(form.heure_arrivee) }}
+                                        {{ form_widget(form.heure_arrivee) }}
+                                        {{ form_errors(form.heure_arrivee) }}
+                                    </div>
                                 </div>
 
                                 {# Prix et places #}
@@ -76,7 +100,7 @@
                                         </div>
                                         {{ form_errors(form.prix) }}
                                         <div class="form-text">
-                                            {{ form_help(form.prix) }}
+                                            Minimum 3 crédits (2 pour la plateforme + 1 pour vous)
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -126,5 +150,38 @@
             </div>
         </div>
     </section>
-{% endblock %}
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calcul du gain chauffeur
+            const prixInput = document.querySelector('[name$="[prix]"]');
+            const prixAffiche = document.getElementById('prixAffiche');
+            const prixChauffeur = document.getElementById('prixChauffeur');
+            
+            function updatePrix() {
+                const prix = parseInt(prixInput.value) || 0;
+                const gain = Math.max(0, prix - 2);
+                prixAffiche.textContent = prix;
+                prixChauffeur.textContent = gain;
+            }
+            
+            if (prixInput) {
+                prixInput.addEventListener('input', updatePrix);
+                updatePrix(); // Initialiser
+            }
+
+            // Synchroniser la date d'arrivée avec la date de départ
+            const dateDepartInput = document.querySelector('[name$="[date_depart_jour]"]');
+            const dateArriveeInput = document.querySelector('[name$="[date_arrivee_jour]"]');
+            
+            if (dateDepartInput && dateArriveeInput) {
+                dateDepartInput.addEventListener('change', function() {
+                    if (!dateArriveeInput.value || dateArriveeInput.value < this.value) {
+                        dateArriveeInput.value = this.value;
+                    }
+                    dateArriveeInput.min = this.value;
+                });
+            }
+        });
+    </script>
+{% endblock %}

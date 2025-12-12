@@ -1,0 +1,81 @@
+{# LES RÉSULTAT DE RECHERCHE #}
+
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 border-0 shadow-sm hover-shadow">
+        <div class="card-body">
+            {# En-tête avec badge écologique #}
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    {% if covoiturage.ecologique %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-leaf me-1"></i>Écologique
+                        </span>
+                    {% endif %}
+                </div>
+                <span class="badge bg-primary fs-6">{{ covoiturage.prix }} crédits</span>
+            </div>
+
+            {# Trajet #}
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt text-medium-green me-2"></i>
+                        <strong>{{ covoiturage.villeDepart }}</strong>
+                    </div>
+                    <div class="border-start border-2 border-medium-green ms-2 ps-3 py-2">
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ covoiturage.dateDepart|date('H:i') }} → {{ covoiturage.dateArrivee|date('H:i') }}
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-geo-alt-fill text-medium-green me-2"></i>
+                        <strong>{{ covoiturage.villeArrivee }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            {# Date #}
+            <div class="mb-3">
+                <i class="bi bi-calendar-event text-muted me-2"></i>
+                <span class="text-muted">{{ covoiturage.dateDepart|date('d/m/Y') }}</span>
+            </div>
+
+            {# Infos chauffeur et places #}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-light-green rounded-circle p-2 me-2">
+                        <i class="bi bi-person text-dark-green"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Chauffeur</small>
+                        <strong>{{ covoiturage.utilisateurId.pseudo }}</strong>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted d-block">Places</small>
+                    <span class="badge bg-{{ covoiturage.placesRestantes > 0 ? 'success' : 'danger' }}">
+                        {{ covoiturage.placesRestantes }} disponible{{ covoiturage.placesRestantes > 1 ? 's' : '' }}
+                    </span>
+                </div>
+            </div>
+
+            {# Véhicule #}
+            <div class="mb-3 p-2 bg-light rounded">
+                <small class="text-muted">
+                    <i class="bi bi-car-front me-1"></i>
+                    {{ covoiturage.vehiculeId.marque }} {{ covoiturage.vehiculeId.modele }}
+                    {% if covoiturage.ecologique %}
+                        <span class="text-success ms-1">🌱</span>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white border-0 pt-0">
+            <a href="{{ path('app_covoiturage_detail', {'id': covoiturage.id}) }}" class="btn btn-outline-primary w-100">
+                <i class="bi bi-eye me-1"></i>Voir les détails
+            </a>
+        </div>
+    </div>
+</div>

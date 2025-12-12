@@ -45,7 +45,7 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
      */
     public function countByRole(array $roles): int
     {
-        return $this->createQueryBuilder('u')
+        return (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
             ->andWhere('u.role IN (:roles)')
             ->setParameter('roles', $roles)
@@ -86,5 +86,19 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Trouve les utilisateurs standard (pas employés, pas admins)
+     * Utilisé pour recharger les crédits de tous les utilisateurs
+     */
+    public function findUtilisateursStandard(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.role NOT IN (:roles)')
+            ->setParameter('roles', ['EMPLOYE', 'ADMIN'])
+            ->orderBy('u.pseudo', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

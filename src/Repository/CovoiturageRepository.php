@@ -18,37 +18,49 @@ class CovoiturageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recherche les covoiturages avec filtres avancés
+     * Recherche de covoiturages avec filtres avancés
      */
     public function findByRechercheAvecFiltres(
         string $villeDepart,
         string $villeArrivee,
-        \DateTime $date,
+        \DateTimeInterface $dateDepart,
+        ?\DateTimeInterface $dateArrivee = null,
+        bool $filtrerParHeure = false,
         ?bool $ecologique = null,
         ?int $prixMax = null,
         ?int $dureeMax = null,
         ?int $noteMin = null
     ): array {
-        $dateDebut = (clone $date)->setTime(0, 0, 0);
-        $dateFin = (clone $date)->setTime(23, 59, 59);
-
         $qb = $this->createQueryBuilder('c')
-            ->leftJoin('c.utilisateur_id', 'u')
-            ->leftJoin('c.vehicule_id', 'v')
-            ->addSelect('u', 'v')
             ->andWhere('LOWER(c.ville_depart) LIKE LOWER(:villeDepart)')
             ->andWhere('LOWER(c.ville_arrivee) LIKE LOWER(:villeArrivee)')
-            ->andWhere('c.date_depart BETWEEN :dateDebut AND :dateFin')
             ->andWhere('c.places_restantes > 0')
             ->setParameter('villeDepart', '%' . $villeDepart . '%')
-            ->setParameter('villeArrivee', '%' . $villeArrivee . '%')
-            ->setParameter('dateDebut', $dateDebut)
-            ->setParameter('dateFin', $dateFin);
+            ->setParameter('villeArrivee', '%' . $villeArrivee . '%');
+
+        // Filtrer par date de départ
+        if ($filtrerParHeure) {
+            // Si une heure est spécifiée, chercher à partir de cette heure
+            $qb->andWhere('c.date_depart >= :dateDepart')
+               ->setParameter('dateDepart', $dateDepart);
+        } else {
+            // Sinon, chercher tous les covoiturages de la journée
+            $dateDebut = new \DateTime($dateDepart->format('Y-m-d') . ' 00:00:00');
+            $dateFin = new \DateTime($dateDepart->format('Y-m-d') . ' 23:59:59');
+            $qb->andWhere('c.date_depart BETWEEN :dateDebut AND :dateFin')
+               ->setParameter('dateDebut', $dateDebut)
+               ->setParameter('dateFin', $dateFin);
+        }
+
+        // Filtrer par date d'arrivée si spécifiée
+        if ($dateArrivee) {
+            $qb->andWhere('c.date_arrivee <= :dateArrivee')
+               ->setParameter('dateArrivee', $dateArrivee);
+        }
 
         // Filtre écologique
         if ($ecologique === true) {
-            $qb->andWhere('c.ecologique = :ecologique')
-               ->setParameter('ecologique', true);
+            $qb->andWhere('c.ecologique = true');
         }
 
         // Filtre prix maximum
@@ -57,49 +69,30 @@ class CovoiturageRepository extends ServiceEntityRepository
                ->setParameter('prixMax', $prixMax);
         }
 
-        // Filtre durée maximum (en minutes)
-        if ($dureeMax !== null) {
-            $qb->andWhere('c.duree <= :dureeMax')
-               ->setParameter('dureeMax', $dureeMax);
-        }
-
-        $qb->orderBy('c.date_depart', 'ASC');
-
-        $results = $qb->getQuery()->getResult();
-
-        // Filtre note minimale (post-query car nécessite calcul)
-        if ($noteMin !== null) {
-            $results = array_filter($results, function (Covoiturage $covoiturage) use ($noteMin) {
-                $noteMoyenne = $this->getNoteMoyenneChauffeur($covoiturage->getUtilisateurId()->getId());
-                return $noteMoyenne !== null && $noteMoyenne >= $noteMin;
-            });
-        }
-
-        return array_values($results);
+        return $qb->orderBy('c.date_depart', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
-     * Recherche les covoiturages par ville de départ, arrivée et date
-     * Ne retourne que les trajets avec au moins une place disponible
+     * Trouver le prochain covoiturage disponible après une date donnée
      */
-    public function findByRecherche(string $villeDepart, string $villeArrivee, \DateTime $date): array
-    {
-        return $this->findByRechercheAvecFiltres($villeDepart, $villeArrivee, $date);
-    }
-
-    /**
-     * Trouve le prochain covoiturage disponible après une date donnée
-     */
-    public function findProchainCovoiturage(string $villeDepart, string $villeArrivee, \DateTime $date): ?Covoiturage
-    {
+    public function findProchainCovoiturage(
+        string $villeDepart,
+        string $villeArrivee,
+        \DateTimeInterface $apresDate
+    ): ?Covoiturage {
+        // Chercher à partir de la fin de la journée
+        $finJournee = new \DateTime($apresDate->format('Y-m-d') . ' 23:59:59');
+        
         return $this->createQueryBuilder('c')
             ->andWhere('LOWER(c.ville_depart) LIKE LOWER(:villeDepart)')
             ->andWhere('LOWER(c.ville_arrivee) LIKE LOWER(:villeArrivee)')
-            ->andWhere('c.date_depart > :date')
+            ->andWhere('c.date_depart > :apresDate')
             ->andWhere('c.places_restantes > 0')
             ->setParameter('villeDepart', '%' . $villeDepart . '%')
             ->setParameter('villeArrivee', '%' . $villeArrivee . '%')
-            ->setParameter('date', $date)
+            ->setParameter('apresDate', $finJournee)
             ->orderBy('c.date_depart', 'ASC')
             ->setMaxResults(1)
             ->getQuery()
@@ -107,42 +100,23 @@ class CovoiturageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Calcule la note moyenne d'un chauffeur
+     * Recherche simple par ville et date (méthode de secours)
      */
-    public function getNoteMoyenneChauffeur(int $utilisateurId): ?float
-    {
-        $result = $this->getEntityManager()->createQueryBuilder()
-            ->select('AVG(a.note) as moyenne')
-            ->from('App\Entity\Avis', 'a')
-            ->join('a.covoiturage_id', 'c')
-            ->where('c.utilisateur_id = :utilisateurId')
-            ->setParameter('utilisateurId', $utilisateurId)
-            ->getQuery()
-            ->getSingleScalarResult();
+    public function findByVillesEtDate(
+        string $villeDepart,
+        string $villeArrivee,
+        \DateTimeInterface $date
+    ): array {
+        $dateDebut = new \DateTime($date->format('Y-m-d') . ' 00:00:00');
+        $dateFin = new \DateTime($date->format('Y-m-d') . ' 23:59:59');
 
-        return $result ? round((float) $result, 1) : null;
-    }
-
-    public function findCovoituragesPasses(Utilisateur $utilisateur): array
-    {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.utilisateur_id = :utilisateur')
-            ->andWhere('c.date_depart < :now')
-            ->setParameter('utilisateur', $utilisateur)
-            ->setParameter('now', new \DateTime())
-            ->orderBy('c.date_depart', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * Trouve les covoiturages d'une journée
-    */
-    public function findCovoituragesDuJour(\DateTime $dateDebut, \DateTime $dateFin): array
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.date_depart >= :dateDebut')
-            ->andWhere('c.date_depart < :dateFin')
+            ->andWhere('LOWER(c.ville_depart) LIKE LOWER(:villeDepart)')
+            ->andWhere('LOWER(c.ville_arrivee) LIKE LOWER(:villeArrivee)')
+            ->andWhere('c.date_depart BETWEEN :dateDebut AND :dateFin')
+            ->andWhere('c.places_restantes > 0')
+            ->setParameter('villeDepart', '%' . $villeDepart . '%')
+            ->setParameter('villeArrivee', '%' . $villeArrivee . '%')
             ->setParameter('dateDebut', $dateDebut)
             ->setParameter('dateFin', $dateFin)
             ->orderBy('c.date_depart', 'ASC')
@@ -151,14 +125,92 @@ class CovoiturageRepository extends ServiceEntityRepository
     }
 
     /**
-    * Compte les covoiturages du mois en cours
+     * Covoiturages passés d'un chauffeur
+     */
+    public function findCovoituragesPasses(Utilisateur $chauffeur): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.utilisateur_id = :chauffeur')
+            ->andWhere('c.date_depart < :now')
+            ->setParameter('chauffeur', $chauffeur)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('c.date_depart', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Covoiturages à venir d'un chauffeur
+     */
+    public function findCovoituragesAVenir(Utilisateur $chauffeur): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.utilisateur_id = :chauffeur')
+            ->andWhere('c.date_depart >= :now')
+            ->setParameter('chauffeur', $chauffeur)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('c.date_depart', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Tous les covoiturages disponibles (places > 0, date future)
+     */
+    public function findAllDisponibles(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.places_restantes > 0')
+            ->andWhere('c.date_depart >= :now')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('c.date_depart', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Nombre total de covoiturages
+     */
+    public function countTotal(): int
+    {
+        return (int) $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Nombre de covoiturages par jour (pour statistiques)
+     */
+    public function getCovoituragesParJour(int $nbJours = 30): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT 
+                DATE(date_depart) as jour,
+                COUNT(id) as total
+            FROM covoiturage
+            WHERE date_depart >= DATE_SUB(NOW(), INTERVAL :nbJours DAY)
+            GROUP BY DATE(date_depart)
+            ORDER BY jour ASC
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['nbJours' => $nbJours]);
+
+        return $result->fetchAllAssociative();
+    }
+
+    /**
+     * Compte les covoiturages créés ce mois-ci
      */
     public function countCovoituragesCeMois(): int
     {
-        $debut = new \DateTime('first day of this month midnight');
+        $debut = new \DateTime('first day of this month 00:00:00');
         $fin = new \DateTime('last day of this month 23:59:59');
 
-        return $this->createQueryBuilder('c')
+        return (int) $this->createQueryBuilder('c')
             ->select('COUNT(c.id)')
             ->andWhere('c.date_depart >= :debut')
             ->andWhere('c.date_depart <= :fin')
@@ -169,7 +221,7 @@ class CovoiturageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Statistiques par mois
+     * Statistiques par mois (pour graphiques admin)
      */
     public function getStatistiquesParMois(int $nbMois = 6): array
     {
@@ -178,9 +230,9 @@ class CovoiturageRepository extends ServiceEntityRepository
         $sql = "
             SELECT 
                 DATE_FORMAT(date_depart, '%Y-%m') as mois,
-                COUNT(*) as nb_covoiturages,
-                SUM(GREATEST(0, (SELECT COUNT(*) FROM participation p WHERE p.covoiturage_id_id = c.id))) as nb_participations
-            FROM covoiturage c
+                COUNT(id) as total_covoiturages,
+                SUM(CASE WHEN ecologique = 1 THEN 1 ELSE 0 END) as covoiturages_eco
+            FROM covoiturage
             WHERE date_depart >= DATE_SUB(NOW(), INTERVAL :nbMois MONTH)
             GROUP BY DATE_FORMAT(date_depart, '%Y-%m')
             ORDER BY mois ASC
@@ -193,18 +245,30 @@ class CovoiturageRepository extends ServiceEntityRepository
     }
 
     /**
-     * Top chauffeurs
+     * Top chauffeurs (par nombre de covoiturages)
      */
     public function getTopChauffeurs(int $limit = 5): array
     {
-        return $this->createQueryBuilder('c')
-            ->select('u.pseudo, u.photo, COUNT(c.id) as nb_trajets')
-            ->join('c.utilisateur_id', 'u')
-            ->groupBy('u.id')
-            ->orderBy('nb_trajets', 'DESC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT 
+                u.id,
+                u.pseudo,
+                u.photo,
+                COUNT(c.id) as nb_covoiturages,
+                SUM(CASE WHEN c.ecologique = 1 THEN 1 ELSE 0 END) as nb_eco
+            FROM covoiturage c
+            JOIN utilisateur u ON c.utilisateur_id_id = u.id
+            GROUP BY u.id, u.pseudo, u.photo
+            ORDER BY nb_covoiturages DESC
+            LIMIT :limit
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['limit' => $limit]);
+
+        return $result->fetchAllAssociative();
     }
 
     /**
@@ -212,12 +276,49 @@ class CovoiturageRepository extends ServiceEntityRepository
      */
     public function getTrajetsPopulaires(int $limit = 5): array
     {
-        return $this->createQueryBuilder('c')
-            ->select('c.ville_depart, c.ville_arrivee, COUNT(c.id) as nb_trajets')
-            ->groupBy('c.ville_depart, c.ville_arrivee')
-            ->orderBy('nb_trajets', 'DESC')
-            ->setMaxResults($limit)
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT 
+                ville_depart,
+                ville_arrivee,
+                COUNT(id) as nb_trajets
+            FROM covoiturage
+            GROUP BY ville_depart, ville_arrivee
+            ORDER BY nb_trajets DESC
+            LIMIT :limit
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery(['limit' => $limit]);
+
+        return $result->fetchAllAssociative();
+    }
+
+    /**
+     * Statistiques globales
+     */
+    public function getStatistiques(): array
+    {
+        // Total covoiturages
+        $totalCovoiturages = $this->countTotal();
+
+        // Covoiturages écologiques
+        $covoituragesEco = (int) $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->where('c.ecologique = true')
             ->getQuery()
-            ->getResult();
+            ->getSingleScalarResult();
+
+        // Pourcentage écologique
+        $pourcentageEco = $totalCovoiturages > 0 
+            ? round(($covoituragesEco / $totalCovoiturages) * 100, 1) 
+            : 0;
+
+        return [
+            'total' => $totalCovoiturages,
+            'ecologiques' => $covoituragesEco,
+            'pourcentage_eco' => $pourcentageEco,
+        ];
     }
 }

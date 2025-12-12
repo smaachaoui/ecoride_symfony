@@ -10,29 +10,48 @@
             <h1 class="text-center text-dark-green mb-4">Rechercher un covoiturage</h1>
 
             <div class="row justify-content-center">
-                <div class="col-lg-10">
+                <div class="col-lg-12">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body p-4">
                             {{ form_start(form, {'attr': {'class': 'search-form'}}) }}
                                 
-                                {# Recherche principale #}
+                                {# Recherche principale - Ligne 1 : Villes #}
                                 <div class="row g-3 align-items-end">
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         {{ form_label(form.ville_depart) }}
                                         {{ form_widget(form.ville_depart) }}
                                         {{ form_errors(form.ville_depart) }}
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         {{ form_label(form.ville_arrivee) }}
                                         {{ form_widget(form.ville_arrivee) }}
                                         {{ form_errors(form.ville_arrivee) }}
                                     </div>
+                                </div>
+
+                                {# Recherche principale - Ligne 2 : Dates et heures #}
+                                <div class="row g-3 align-items-end mt-2">
                                     <div class="col-md-3">
-                                        {{ form_label(form.date) }}
-                                        {{ form_widget(form.date) }}
-                                        {{ form_errors(form.date) }}
+                                        {{ form_label(form.date_depart) }}
+                                        {{ form_widget(form.date_depart) }}
+                                        {{ form_errors(form.date_depart) }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form_label(form.heure_depart) }}
+                                        {{ form_widget(form.heure_depart) }}
+                                        {{ form_errors(form.heure_depart) }}
                                     </div>
                                     <div class="col-md-3">
+                                        {{ form_label(form.date_arrivee) }}
+                                        {{ form_widget(form.date_arrivee) }}
+                                        {{ form_errors(form.date_arrivee) }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form_label(form.heure_arrivee) }}
+                                        {{ form_widget(form.heure_arrivee) }}
+                                        {{ form_errors(form.heure_arrivee) }}
+                                    </div>
+                                    <div class="col-md-2">
                                         {{ form_widget(form.rechercher) }}
                                     </div>
                                 </div>
@@ -42,25 +61,25 @@
                                     <div class="accordion" id="filtresAccordion">
                                         <div class="accordion-item border-0">
                                             <h2 class="accordion-header" id="filtresHeading">
-                                                <button class="accordion-button {{ filtresActifs is defined and filtresActifs ? '' : 'collapsed' }} bg-light text-dark-green" 
+                                                <button class="accordion-button {{ filtresActifs ? '' : 'collapsed' }} bg-light text-dark-green" 
                                                         type="button" 
                                                         data-bs-toggle="collapse" 
                                                         data-bs-target="#filtresCollapse" 
-                                                        aria-expanded="{{ filtresActifs is defined and filtresActifs ? 'true' : 'false' }}" 
+                                                        aria-expanded="{{ filtresActifs ? 'true' : 'false' }}" 
                                                         aria-controls="filtresCollapse">
                                                     <i class="bi bi-filter me-2"></i>
                                                     Filtres avancés
-                                                    {% if filtresActifs is defined and filtresActifs %}
+                                                    {% if filtresActifs %}
                                                         <span class="badge bg-success ms-2">Actifs</span>
                                                     {% endif %}
                                                 </button>
                                             </h2>
                                             <div id="filtresCollapse" 
-                                                 class="accordion-collapse collapse {{ filtresActifs is defined and filtresActifs ? 'show' : '' }}" 
+                                                 class="accordion-collapse collapse {{ filtresActifs ? 'show' : '' }}" 
                                                  aria-labelledby="filtresHeading" 
                                                  data-bs-parent="#filtresAccordion">
                                                 <div class="accordion-body bg-light">
-                                                    <div class="row g-3">
+                                                    <div class="row g-3 align-items-center">
                                                         <div class="col-md-3">
                                                             <div class="form-check">
                                                                 {{ form_widget(form.ecologique) }}
@@ -99,78 +118,72 @@
 
     <section class="py-5">
         <div class="container">
-            {% if recherche %}
-                {% if covoiturages is not empty %}
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="text-dark-green mb-0">
-                            <i class="bi bi-car-front me-2"></i>
+            {% if covoiturages is not empty %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-dark-green mb-0">
+                        <i class="bi bi-car-front me-2"></i>
+                        {% if recherche %}
                             {{ covoiturages|length }} covoiturage{{ covoiturages|length > 1 ? 's' : '' }} trouvé{{ covoiturages|length > 1 ? 's' : '' }}
-                        </h2>
-                        
-                        {% if filtresActifs %}
-                            <a href="{{ path('app_covoiturages', {
-                                'ville_depart': app.request.query.get('ville_depart'),
-                                'ville_arrivee': app.request.query.get('ville_arrivee'),
-                                'date': app.request.query.get('date')
-                            }) }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Réinitialiser les filtres
-                            </a>
+                        {% else %}
+                            Tous les covoiturages disponibles ({{ covoiturages|length }})
                         {% endif %}
-                    </div>
+                    </h2>
+                    
+                    {% if filtresActifs %}
+                        <a href="{{ path('app_covoiturages') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Réinitialiser les filtres
+                        </a>
+                    {% endif %}
+                </div>
 
-                    <div class="row g-4">
-                        {% for covoiturage in covoiturages %}
-                            {% include 'covoiturage/_card.html.twig' with {'covoiturage': covoiturage} %}
-                        {% endfor %}
-                    </div>
+                <div class="row g-4">
+                    {% for covoiturage in covoiturages %}
+                        {% include 'covoiturage/_card.html.twig' with {'covoiturage': covoiturage} %}
+                    {% endfor %}
+                </div>
 
-                {% else %}
-                    <div class="text-center py-5">
-                        <div class="mb-4">
-                            <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+            {% elseif recherche %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-dark-green">Aucun covoiturage trouvé</h2>
+                    <p class="text-muted">
+                        Aucun trajet ne correspond à votre recherche
+                        {% if filtresActifs %}avec les filtres sélectionnés{% endif %}.
+                    </p>
+
+                    {% if filtresActifs %}
+                        <a href="{{ path('app_covoiturages') }}" class="btn btn-outline-secondary mb-3">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Essayer sans filtres
+                        </a>
+                    {% endif %}
+
+                    {% if prochainCovoiturage %}
+                        <div class="alert alert-success d-inline-block mt-3">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>Suggestion :</strong> Un covoiturage est disponible le 
+                            <strong>{{ prochainCovoiturage.dateDepart|date('d/m/Y') }}</strong> à <strong>{{ prochainCovoiturage.dateDepart|date('H:i') }}</strong>
+                            <a href="{{ path('app_covoiturage_detail', {'id': prochainCovoiturage.id}) }}" class="btn btn-sm btn-primary ms-2">
+                                Voir ce trajet
+                            </a>
                         </div>
-                        <h2 class="text-dark-green">Aucun covoiturage trouvé</h2>
-                        <p class="text-muted">
-                            Aucun trajet ne correspond à votre recherche
-                            {% if filtresActifs %}avec les filtres sélectionnés{% endif %}.
-                        </p>
-
-                        {% if filtresActifs %}
-                            <a href="{{ path('app_covoiturages', {
-                                'ville_depart': app.request.query.get('ville_depart'),
-                                'ville_arrivee': app.request.query.get('ville_arrivee'),
-                                'date': app.request.query.get('date')
-                            }) }}" class="btn btn-outline-secondary mb-3">
-                                <i class="bi bi-x-circle me-1"></i>
-                                Essayer sans filtres
-                            </a>
-                        {% endif %}
-
-                        {% if prochainCovoiturage %}
-                            <div class="alert alert-success d-inline-block mt-3">
-                                <i class="bi bi-lightbulb me-2"></i>
-                                <strong>Suggestion :</strong> Un covoiturage est disponible le 
-                                <strong>{{ prochainCovoiturage.dateDepart|date('d/m/Y') }}</strong>
-                                <a href="{{ path('app_covoiturages', {
-                                    'ville_depart': app.request.query.get('ville_depart'),
-                                    'ville_arrivee': app.request.query.get('ville_arrivee'),
-                                    'date': prochainCovoiturage.dateDepart|date('Y-m-d')
-                                }) }}" class="btn btn-sm btn-primary ms-2">
-                                    Voir ce trajet
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-
+                    {% endif %}
+                </div>
             {% else %}
                 <div class="text-center py-5">
                     <div class="mb-4">
-                        <i class="bi bi-signpost-split text-medium-green" style="font-size: 4rem;"></i>
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
                     </div>
-                    <h2 class="text-dark-green">Trouvez votre covoiturage</h2>
-                    <p class="text-muted">Remplissez le formulaire ci-dessus pour rechercher un trajet.</p>
+                    <h2 class="text-dark-green">Aucun covoiturage disponible</h2>
+                    <p class="text-muted">Il n'y a actuellement aucun covoiturage proposé.</p>
+                    {% if is_granted('ROLE_USER') %}
+                        <a href="{{ path('app_covoiturage_creer') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Proposer un covoiturage
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

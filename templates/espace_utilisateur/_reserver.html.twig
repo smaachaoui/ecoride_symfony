@@ -11,43 +11,70 @@
         <form action="{{ path('app_covoiturages') }}" method="GET">
             <div class="row">
                 {# Ville de départ #}
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label for="ville_depart" class="form-label">
                         <i class="bi bi-geo-alt text-medium-green me-1"></i>Ville de départ
                     </label>
                     <input type="text" class="form-control" id="ville_depart" name="ville_depart" 
-                           placeholder="Ex: Paris">
+                           placeholder="Ex: Paris" required>
                 </div>
 
                 {# Ville d'arrivée #}
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label for="ville_arrivee" class="form-label">
                         <i class="bi bi-geo-alt-fill text-medium-green me-1"></i>Ville d'arrivée
                     </label>
                     <input type="text" class="form-control" id="ville_arrivee" name="ville_arrivee" 
-                           placeholder="Ex: Lyon">
+                           placeholder="Ex: Lyon" required>
+                </div>
+            </div>
+
+            <div class="row">
+                {# Date de départ #}
+                <div class="col-md-3 mb-3">
+                    <label for="date_depart" class="form-label">
+                        <i class="bi bi-calendar-event text-medium-green me-1"></i>Date de départ
+                    </label>
+                    <input type="date" class="form-control" id="date_depart" name="date_depart" 
+                           min="{{ 'now'|date('Y-m-d') }}" required>
                 </div>
 
-                {# Date #}
-                <div class="col-md-4 mb-3">
-                    <label for="date" class="form-label">
-                        <i class="bi bi-calendar-event text-medium-green me-1"></i>Date
+                {# Heure de départ #}
+                <div class="col-md-3 mb-3">
+                    <label for="heure_depart" class="form-label">
+                        <i class="bi bi-clock text-medium-green me-1"></i>Heure de départ
                     </label>
-                    <input type="date" class="form-control" id="date" name="date" 
+                    <input type="time" class="form-control" id="heure_depart" name="heure_depart">
+                </div>
+
+                {# Date d'arrivée #}
+                <div class="col-md-3 mb-3">
+                    <label for="date_arrivee" class="form-label">
+                        <i class="bi bi-calendar-check text-medium-green me-1"></i>Date d'arrivée
+                    </label>
+                    <input type="date" class="form-control" id="date_arrivee" name="date_arrivee" 
                            min="{{ 'now'|date('Y-m-d') }}">
+                </div>
+
+                {# Heure d'arrivée #}
+                <div class="col-md-3 mb-3">
+                    <label for="heure_arrivee" class="form-label">
+                        <i class="bi bi-clock-fill text-medium-green me-1"></i>Heure d'arrivée
+                    </label>
+                    <input type="time" class="form-control" id="heure_arrivee" name="heure_arrivee">
                 </div>
             </div>
 
             {# Filtres avancés #}
-            <div class="accordion mb-4" id="filtresAccordion">
+            <div class="accordion mb-4" id="filtresAccordionReserver">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed bg-light" type="button" 
-                                data-bs-toggle="collapse" data-bs-target="#filtresAvances">
+                                data-bs-toggle="collapse" data-bs-target="#filtresAvancesReserver">
                             <i class="bi bi-sliders me-2"></i>Filtres avancés
                         </button>
                     </h2>
-                    <div id="filtresAvances" class="accordion-collapse collapse" data-bs-parent="#filtresAccordion">
+                    <div id="filtresAvancesReserver" class="accordion-collapse collapse" data-bs-parent="#filtresAccordionReserver">
                         <div class="accordion-body">
                             <div class="row">
                                 {# Voyage écologique #}
