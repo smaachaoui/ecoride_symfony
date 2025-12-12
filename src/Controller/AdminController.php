@@ -27,6 +27,10 @@ class AdminController extends AbstractController
         AvisRepository $avisRepository
     ): Response {
         // Statistiques générales
+
+    try{
+
+    
         $stats = [
             'total_utilisateurs' => $utilisateurRepository->count([]),
             'total_chauffeurs' => $utilisateurRepository->countByRole(['CHAUFFEUR', 'CHAUFFEUR_PASSAGER']),
@@ -39,6 +43,10 @@ class AdminController extends AbstractController
             'credits_plateforme' => $participationRepository->calculerCreditsPlateforme(),
             'avis_en_attente' => $avisRepository->count(['statut' => 'en_attente']),
         ];
+    }
+    catch (\Exception $e) {
+        dd('Erreur: ' . $e->getMessage());
+    }
 
         // Derniers utilisateurs inscrits
         $derniersUtilisateurs = $utilisateurRepository->findBy([], ['created_at' => 'DESC'], 5);

@@ -1,194 +1,211 @@
-{# templates/admin/statistiques.html.twig #}
-
 {% extends 'base.html.twig' %}
 
-{% block title %}Statistiques - Admin - EcoRide{% endblock %}
+{% block title %}Statistiques - Admin EcoRide{% endblock %}
 
 {% block body %}
-    <section class="py-5 bg-light min-vh-100">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 text-dark-green mb-1">
-                        <i class="bi bi-graph-up me-2"></i>Statistiques
-                    </h1>
-                    <p class="text-muted mb-0">Vue d'ensemble de la plateforme</p>
-                </div>
-                <a href="{{ path('app_admin_dashboard') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i>Retour
-                </a>
-            </div>
+<section class="py-5 bg-light min-vh-100">
+    <div class="container">
+        {# Breadcrumb #}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}">Admin</a></li>
+                <li class="breadcrumb-item active">Statistiques</li>
+            </ol>
+        </nav>
 
-            {# Crédits plateforme #}
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm bg-dark-green text-white">
-                        <div class="card-body py-4">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" 
-                                         style="width: 80px; height: 80px;">
-                                        <i class="bi bi-coin text-dark-green fs-1"></i>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <h2 class="display-4 mb-0">{{ creditsPlateforme }}</h2>
-                                    <p class="mb-0 opacity-75">Crédits gagnés par la plateforme (2 crédits par trajet)</p>
-                                </div>
-                            </div>
-                        </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 text-dark-green mb-0">
+                <i class="bi bi-graph-up me-2"></i>Statistiques
+            </h1>
+        </div>
+
+        {# Crédits plateforme #}
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 bg-dark-green text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="bi bi-coin fs-1 mb-3"></i>
+                        <h2 class="display-4 fw-bold">{{ creditsPlateforme }}</h2>
+                        <p class="mb-0">Crédits gagnés par la plateforme</p>
+                        <small class="opacity-75">(2 crédits par participation acceptée)</small>
                     </div>
                 </div>
             </div>
-
-            <div class="row g-4 mb-4">
-                {# Évolution des covoiturages #}
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="mb-0 text-dark-green">
-                                <i class="bi bi-bar-chart me-2"></i>Covoiturages par mois
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            {% if statsParMois|length > 0 %}
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-dark-green">
+                            <i class="bi bi-bar-chart me-2"></i>Crédits par mois
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if creditsParMois|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Mois</th>
+                                            <th class="text-end">Crédits</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in creditsParMois %}
                                             <tr>
-                                                <th>Mois</th>
-                                                <th>Covoiturages</th>
-                                                <th>Participations</th>
-                                                <th>Progression</th>
+                                                <td>{{ stat.mois }}</td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-success">{{ stat.credits }}</span>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for stat in statsParMois %}
-                                                <tr>
-                                                    <td class="fw-medium">{{ stat.mois }}</td>
-                                                    <td>{{ stat.nb_covoiturages }}</td>
-                                                    <td>{{ stat.nb_participations }}</td>
-                                                    <td>
-                                                        <div class="progress" style="height: 20px; width: 150px;">
-                                                            <div class="progress-bar bg-dark-green" 
-                                                                 style="width: {{ min(100, stat.nb_covoiturages * 5) }}%">
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {% else %}
-                                <div class="text-center py-4">
-                                    <p class="text-muted mb-0">Pas encore de données</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                {# Crédits par mois #}
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="mb-0 text-dark-green">
-                                <i class="bi bi-coin me-2"></i>Crédits par mois
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            {% if creditsParMois|length > 0 %}
-                                <div class="list-group list-group-flush">
-                                    {% for data in creditsParMois %}
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>{{ data.mois }}</span>
-                                            <span class="badge bg-dark-green rounded-pill">{{ data.credits }} cr.</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="p-4 text-center">
-                                    <p class="text-muted mb-0 small">Pas encore de données</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                {# Top chauffeurs #}
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="mb-0 text-dark-green">
-                                <i class="bi bi-trophy me-2"></i>Top chauffeurs
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            {% if topChauffeurs|length > 0 %}
-                                <div class="list-group list-group-flush">
-                                    {% for index, chauffeur in topChauffeurs %}
-                                        <div class="list-group-item d-flex align-items-center">
-                                            <span class="badge {{ index == 0 ? 'bg-warning' : (index == 1 ? 'bg-secondary' : (index == 2 ? 'bg-danger' : 'bg-light text-dark')) }} me-3">
-                                                {{ index + 1 }}
-                                            </span>
-                                            {% if chauffeur.photo %}
-                                                <img src="{{ asset('uploads/photos/' ~ chauffeur.photo) }}" 
-                                                     class="rounded-circle me-2" width="35" height="35"
-                                                     style="object-fit: cover;">
-                                            {% else %}
-                                                <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
-                                                     style="width: 35px; height: 35px;">
-                                                    <i class="bi bi-person text-dark-green small"></i>
-                                                </div>
-                                            {% endif %}
-                                            <span class="flex-grow-1 fw-medium">{{ chauffeur.pseudo }}</span>
-                                            <span class="badge bg-dark-green">{{ chauffeur.nb_trajets }} trajets</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="p-4 text-center">
-                                    <p class="text-muted mb-0">Pas encore de données</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                {# Trajets populaires #}
-                <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 py-3">
-                            <h5 class="mb-0 text-dark-green">
-                                <i class="bi bi-geo-alt me-2"></i>Trajets populaires
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            {% if trajetsPopulaires|length > 0 %}
-                                <div class="list-group list-group-flush">
-                                    {% for trajet in trajetsPopulaires %}
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>
-                                                {{ trajet.ville_depart }}
-                                                <i class="bi bi-arrow-right mx-2 text-muted"></i>
-                                                {{ trajet.ville_arrivee }}
-                                            </span>
-                                            <span class="badge bg-success">{{ trajet.nb_trajets }}</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="p-4 text-center">
-                                    <p class="text-muted mb-0">Pas encore de données</p>
-                                </div>
-                            {% endif %}
-                        </div>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mb-0">Aucune donnée disponible</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+
+        <div class="row g-4 mb-4">
+            {# Covoiturages par mois #}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-dark-green">
+                            <i class="bi bi-car-front me-2"></i>Covoiturages par mois
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if statsParMois|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Mois</th>
+                                            <th class="text-end">Total</th>
+                                            <th class="text-end">Écologiques</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in statsParMois %}
+                                            <tr>
+                                                <td>{{ stat.mois }}</td>
+                                                <td class="text-end">{{ stat.total_covoiturages }}</td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-leaf me-1"></i>{{ stat.covoiturages_eco }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mb-0">Aucune donnée disponible</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Top chauffeurs #}
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 text-dark-green">
+                            <i class="bi bi-trophy me-2"></i>Top chauffeurs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if topChauffeurs|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Chauffeur</th>
+                                            <th class="text-end">Covoiturages</th>
+                                            <th class="text-end">Éco</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i, chauffeur in topChauffeurs %}
+                                            <tr>
+                                                <td>
+                                                    {% if i == 0 %}
+                                                        <span class="badge bg-warning text-dark">🥇</span>
+                                                    {% elseif i == 1 %}
+                                                        <span class="badge bg-secondary">🥈</span>
+                                                    {% elseif i == 2 %}
+                                                        <span class="badge bg-danger">🥉</span>
+                                                    {% else %}
+                                                        {{ i + 1 }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if chauffeur.photo %}
+                                                            <img src="{{ asset('uploads/photos/' ~ chauffeur.photo) }}" 
+                                                                 class="rounded-circle me-2" width="30" height="30"
+                                                                 style="object-fit: cover;">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-light-green d-flex align-items-center justify-content-center me-2" 
+                                                                 style="width: 30px; height: 30px;">
+                                                                <i class="bi bi-person text-dark-green small"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        {{ chauffeur.pseudo }}
+                                                    </div>
+                                                </td>
+                                                <td class="text-end">{{ chauffeur.nb_covoiturages }}</td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-success">{{ chauffeur.nb_eco }}</span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mb-0">Aucune donnée disponible</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Trajets populaires #}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 text-dark-green">
+                    <i class="bi bi-signpost-split me-2"></i>Trajets les plus populaires
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if trajetsPopulaires|length > 0 %}
+                    <div class="row">
+                        {% for trajet in trajetsPopulaires %}
+                            <div class="col-md-4 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ trajet.ville_depart }}</strong>
+                                            <i class="bi bi-arrow-right mx-2 text-muted"></i>
+                                            <strong>{{ trajet.ville_arrivee }}</strong>
+                                        </div>
+                                        <span class="badge bg-primary">{{ trajet.nb_trajets }} trajets</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center mb-0">Aucune donnée disponible</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

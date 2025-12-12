@@ -1,5 +1,3 @@
-{# templates/admin/index.html.twig #}
-
 {% extends 'base.html.twig' %}
 
 {% block title %}Espace Administrateur - EcoRide{% endblock %}
@@ -182,6 +180,10 @@
                                                     {% endif %}
                                                 </td>
                                             </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">Aucun utilisateur</td>
+                                            </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -197,7 +199,7 @@
                             <h5 class="mb-0 text-dark-green">
                                 <i class="bi bi-car-front me-2"></i>Derniers covoiturages
                             </h5>
-                            <a href="{{ path('app_employe_covoiturages') }}" class="btn btn-sm btn-outline-success">
+                            <a href="{{ path('app_covoiturages') }}" class="btn btn-sm btn-outline-success">
                                 Voir tout
                             </a>
                         </div>
@@ -227,6 +229,10 @@
                                                         {{ covoit.placesRestantes }}
                                                     </span>
                                                 </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">Aucun covoiturage</td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>

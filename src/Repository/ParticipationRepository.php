@@ -151,21 +151,23 @@ class ParticipationRepository extends ServiceEntityRepository
     public function getCreditsParMois(int $nbMois = 6): array
     {
         $conn = $this->getEntityManager()->getConnection();
+        
+        $dateDebut = new \DateTime("-{$nbMois} months");
+        $dateDebutStr = $dateDebut->format('Y-m-d');
 
         $sql = "
             SELECT 
                 DATE_FORMAT(c.date_depart, '%Y-%m') as mois,
                 COUNT(p.id) * 2 as credits
             FROM participation p
-            JOIN covoiturage c ON p.covoiturage_id_id = c.id
-            WHERE c.date_depart >= DATE_SUB(NOW(), INTERVAL :nbMois MONTH)
+            JOIN covoiturage c ON p.covoiturage_id = c.id
+            WHERE c.date_depart >= '{$dateDebutStr}'
             AND p.statut = 'accepte'
             GROUP BY DATE_FORMAT(c.date_depart, '%Y-%m')
             ORDER BY mois ASC
         ";
 
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->executeQuery(['nbMois' => $nbMois]);
+        $result = $conn->executeQuery($sql);
 
         return $result->fetchAllAssociative();
     }

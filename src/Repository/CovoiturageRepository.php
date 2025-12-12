@@ -226,6 +226,9 @@ class CovoiturageRepository extends ServiceEntityRepository
     public function getStatistiquesParMois(int $nbMois = 6): array
     {
         $conn = $this->getEntityManager()->getConnection();
+        
+        $dateDebut = new \DateTime("-{$nbMois} months");
+        $dateDebutStr = $dateDebut->format('Y-m-d');
 
         $sql = "
             SELECT 
@@ -233,13 +236,12 @@ class CovoiturageRepository extends ServiceEntityRepository
                 COUNT(id) as total_covoiturages,
                 SUM(CASE WHEN ecologique = 1 THEN 1 ELSE 0 END) as covoiturages_eco
             FROM covoiturage
-            WHERE date_depart >= DATE_SUB(NOW(), INTERVAL :nbMois MONTH)
+            WHERE date_depart >= '{$dateDebutStr}'
             GROUP BY DATE_FORMAT(date_depart, '%Y-%m')
             ORDER BY mois ASC
         ";
 
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->executeQuery(['nbMois' => $nbMois]);
+        $result = $conn->executeQuery($sql);
 
         return $result->fetchAllAssociative();
     }
@@ -259,14 +261,13 @@ class CovoiturageRepository extends ServiceEntityRepository
                 COUNT(c.id) as nb_covoiturages,
                 SUM(CASE WHEN c.ecologique = 1 THEN 1 ELSE 0 END) as nb_eco
             FROM covoiturage c
-            JOIN utilisateur u ON c.utilisateur_id_id = u.id
+            JOIN utilisateur u ON c.utilisateur_id = u.id
             GROUP BY u.id, u.pseudo, u.photo
             ORDER BY nb_covoiturages DESC
-            LIMIT :limit
+            LIMIT {$limit}
         ";
 
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->executeQuery(['limit' => $limit]);
+        $result = $conn->executeQuery($sql);
 
         return $result->fetchAllAssociative();
     }
@@ -286,13 +287,30 @@ class CovoiturageRepository extends ServiceEntityRepository
             FROM covoiturage
             GROUP BY ville_depart, ville_arrivee
             ORDER BY nb_trajets DESC
-            LIMIT :limit
+            LIMIT {$limit}
         ";
 
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->executeQuery(['limit' => $limit]);
+        $result = $conn->executeQuery($sql);
 
         return $result->fetchAllAssociative();
+    }
+
+    /**
+     * Covoiturages du jour
+     */
+    public function findCovoituragesDuJour(): array
+    {
+        $debut = new \DateTime('today 00:00:00');
+        $fin = new \DateTime('today 23:59:59');
+
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.date_depart >= :debut')
+            ->andWhere('c.date_depart <= :fin')
+            ->setParameter('debut', $debut)
+            ->setParameter('fin', $fin)
+            ->orderBy('c.date_depart', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
