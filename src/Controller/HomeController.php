@@ -22,7 +22,7 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_covoiturages', [
                 'ville_depart' => $data['ville_depart'],
                 'ville_arrivee' => $data['ville_arrivee'],
-                'date' => $data['date']->format('Y-m-d'),
+                'date' => $data['date_depart']->format('Y-m-d'),
             ]);
         }
 

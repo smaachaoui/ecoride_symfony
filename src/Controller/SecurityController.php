@@ -9,6 +9,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -19,7 +22,8 @@ class SecurityController extends AbstractController
     public function register(
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        MailerInterface $mailer
     ): Response {
         // Rediriger si déjà connecté
         if ($this->getUser()) {
@@ -42,6 +46,19 @@ class SecurityController extends AbstractController
             $entityManager->persist($utilisateur);
             $entityManager->flush();
 
+            // Envoyer l'email de bienvenue
+            $email = (new TemplatedEmail())
+                ->from('noreply@ecoride.fr')
+                ->to($utilisateur->getEmail())
+                ->subject('Bienvenue sur EcoRide !')
+                ->htmlTemplate('emails/bienvenue.html.twig')
+                ->context([
+                    'utilisateur' => $utilisateur,
+                    'creditsOfferts' => Utilisateur::CREDITS_INSCRIPTION,
+                ]);
+
+            $mailer->send($email);
+
             $this->addFlash('success', 'Votre compte a été créé avec succès ! Vous bénéficiez de ' . Utilisateur::CREDITS_INSCRIPTION . ' crédits offerts. Connectez-vous pour commencer.');
 
             return $this->redirectToRoute('app_login');
@@ -62,7 +79,7 @@ class SecurityController extends AbstractController
 
         // Récupérer l'erreur de connexion s'il y en a une
         $error = $authenticationUtils->getLastAuthenticationError();
-        
+
         // Dernier nom d'utilisateur saisi
         $lastUsername = $authenticationUtils->getLastUsername();
 

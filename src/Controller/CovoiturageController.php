@@ -26,52 +26,72 @@ class CovoiturageController extends AbstractController
         $covoiturages = [];
         $recherche = false;
         $prochainCovoiturage = null;
+        $filtresActifs = false;
 
-        // Récupérer les paramètres GET
-        $villeDepart = $request->query->get('ville_depart');
-        $villeArrivee = $request->query->get('ville_arrivee');
-        $date = $request->query->get('date');
-        
-        // Filtres avancés
-        $ecologique = $request->query->get('ecologique') ? true : null;
-        $prixMax = $request->query->get('prix_max') ? (int) $request->query->get('prix_max') : null;
-        $dureeMax = $request->query->get('duree_max') ? (int) $request->query->get('duree_max') : null;
-        $noteMin = $request->query->get('note_min') ? (int) $request->query->get('note_min') : null;
+        // Si le formulaire est soumis
+        if ($form->isSubmitted()) {
+            $data = $form->getData();
+            
+            $villeDepart = $data['ville_depart'] ?? null;
+            $villeArrivee = $data['ville_arrivee'] ?? null;
+            $dateDepart = $data['date_depart'] ?? null;
+            $heureDepart = $data['heure_depart'] ?? null;
+            $dateArrivee = $data['date_arrivee'] ?? null;
+            $heureArrivee = $data['heure_arrivee'] ?? null;
+            $ecologique = $data['ecologique'] ?? null;
+            $prixMax = $data['prix_max'] ?? null;
+            $dureeMax = $data['duree_max'] ?? null;
+            $noteMin = $data['note_min'] ?? null;
 
-        if ($villeDepart && $villeArrivee && $date) {
-            $recherche = true;
-            $dateRecherche = new \DateTime($date);
+            if ($villeDepart && $villeArrivee && $dateDepart) {
+                $recherche = true;
+                
+                // Construire le datetime de départ
+                if ($heureDepart) {
+                    $dateTimeDepart = new \DateTime($dateDepart->format('Y-m-d') . ' ' . $heureDepart->format('H:i:s'));
+                } else {
+                    $dateTimeDepart = new \DateTime($dateDepart->format('Y-m-d') . ' 00:00:00');
+                }
+                
+                // Construire le datetime d'arrivée (si fourni)
+                $dateTimeArrivee = null;
+                if ($dateArrivee) {
+                    if ($heureArrivee) {
+                        $dateTimeArrivee = new \DateTime($dateArrivee->format('Y-m-d') . ' ' . $heureArrivee->format('H:i:s'));
+                    } else {
+                        $dateTimeArrivee = new \DateTime($dateArrivee->format('Y-m-d') . ' 23:59:59');
+                    }
+                }
 
-            // Rechercher les covoiturages avec filtres
-            $covoiturages = $covoiturageRepository->findByRechercheAvecFiltres(
-                $villeDepart,
-                $villeArrivee,
-                $dateRecherche,
-                $ecologique,
-                $prixMax,
-                $dureeMax,
-                $noteMin
-            );
-
-            // Si aucun résultat, chercher le prochain covoiturage disponible
-            if (empty($covoiturages)) {
-                $prochainCovoiturage = $covoiturageRepository->findProchainCovoiturage(
+                // Rechercher les covoiturages avec filtres
+                $covoiturages = $covoiturageRepository->findByRechercheAvecFiltres(
                     $villeDepart,
                     $villeArrivee,
-                    $dateRecherche
+                    $dateTimeDepart,
+                    $dateTimeArrivee,
+                    $heureDepart ? true : false,
+                    $ecologique,
+                    $prixMax,
+                    $dureeMax,
+                    $noteMin
                 );
-            }
 
-            // Pré-remplir le formulaire
-            $form->setData([
-                'ville_depart' => $villeDepart,
-                'ville_arrivee' => $villeArrivee,
-                'date' => $dateRecherche,
-                'ecologique' => $ecologique,
-                'prix_max' => $prixMax,
-                'duree_max' => $dureeMax,
-                'note_min' => $noteMin,
-            ]);
+                // Si aucun résultat, chercher le prochain covoiturage disponible
+                if (empty($covoiturages)) {
+                    $prochainCovoiturage = $covoiturageRepository->findProchainCovoiturage(
+                        $villeDepart,
+                        $villeArrivee,
+                        $dateTimeDepart
+                    );
+                }
+
+                // Déterminer si des filtres avancés sont actifs
+                $filtresActifs = $ecologique || $prixMax || $dureeMax || $noteMin;
+            }
+        }
+        else {
+        // Par défaut, afficher tous les covoiturages disponibles
+        $covoiturages = $covoiturageRepository->findAllDisponibles();
         }
 
         return $this->render('covoiturage/index.html.twig', [
@@ -79,7 +99,7 @@ class CovoiturageController extends AbstractController
             'covoiturages' => $covoiturages,
             'recherche' => $recherche,
             'prochainCovoiturage' => $prochainCovoiturage,
-            'filtresActifs' => $ecologique || $prixMax || $dureeMax || $noteMin,
+            'filtresActifs' => $filtresActifs,
         ]);
     }
 
@@ -89,6 +109,7 @@ class CovoiturageController extends AbstractController
         // Vérifier si l'utilisateur participe déjà
         $dejaParticipant = false;
         $participationEnAttente = false;
+        $participationAcceptee = false;
         $estChauffeur = false;
         
         if ($this->getUser()) {
@@ -100,6 +121,7 @@ class CovoiturageController extends AbstractController
             if ($participation) {
                 $dejaParticipant = true;
                 $participationEnAttente = $participation->isEnAttente();
+                $participationAcceptee = $participation->isAccepte();
             }
             
             $estChauffeur = $covoiturage->getUtilisateurId() === $this->getUser();
@@ -109,11 +131,12 @@ class CovoiturageController extends AbstractController
             'covoiturage' => $covoiturage,
             'dejaParticipant' => $dejaParticipant,
             'participationEnAttente' => $participationEnAttente,
+            'participationAcceptee' => $participationAcceptee,
             'estChauffeur' => $estChauffeur,
         ]);
     }
 
-    #[Route('/covoiturage/creer', name: 'app_covoiturage_creer')]
+    #[Route('/covoiturage/creer', name: 'app_covoiturage_creer', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
     public function creer(Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -132,7 +155,50 @@ class CovoiturageController extends AbstractController
         }
 
         $covoiturage = new Covoiturage();
+        
+        // Vérifier si c'est une soumission depuis _proposer.html.twig (formulaire HTML simple)
+        $fromProposer = $request->isMethod('POST') && $request->request->has('ville_depart') && !$request->request->has('creer_covoiturage');
+        
+        if ($fromProposer) {
+            // Pré-remplir avec les données POST venant de _proposer.html.twig
+            $covoiturage->setVilleDepart($request->request->get('ville_depart'));
+            $covoiturage->setVilleArrivee($request->request->get('ville_arrivee'));
+            $covoiturage->setPrix((int) $request->request->get('prix'));
+            $covoiturage->setPlacesRestantes((int) $request->request->get('places_restantes'));
+            
+            // Récupérer le véhicule
+            $vehiculeId = $request->request->get('vehicule_id');
+            if ($vehiculeId) {
+                $vehicule = $entityManager->getRepository(\App\Entity\Vehicule::class)->find($vehiculeId);
+                if ($vehicule && $vehicule->getUtilisateurId() === $user) {
+                    $covoiturage->setVehiculeId($vehicule);
+                }
+            }
+        }
+        
         $form = $this->createForm(CreerCovoiturageType::class, $covoiturage);
+        
+        // Pré-remplir les champs date/heure non mappés si données POST venant de _proposer.html.twig
+        if ($fromProposer) {
+            $dateDepart = $request->request->get('date_depart');
+            $heureDepart = $request->request->get('heure_depart');
+            $dateArrivee = $request->request->get('date_arrivee');
+            $heureArrivee = $request->request->get('heure_arrivee');
+            
+            if ($dateDepart) {
+                $form->get('date_depart_jour')->setData(new \DateTime($dateDepart));
+            }
+            if ($heureDepart) {
+                $form->get('heure_depart')->setData(new \DateTime($heureDepart));
+            }
+            if ($dateArrivee) {
+                $form->get('date_arrivee_jour')->setData(new \DateTime($dateArrivee));
+            }
+            if ($heureArrivee) {
+                $form->get('heure_arrivee')->setData(new \DateTime($heureArrivee));
+            }
+        }
+        
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -334,14 +400,15 @@ class CovoiturageController extends AbstractController
         if ($participation->isAccepte()) {
             $user->setCredits($user->getCredits() + $participation->getCreditsUtilises());
             $covoiturage->setPlacesRestantes($covoiturage->getPlacesRestantes() + 1);
+            $this->addFlash('success', 'Votre participation a été annulée. Vos ' . $participation->getCreditsUtilises() . ' crédits ont été remboursés.');
+        } else {
+            $this->addFlash('success', 'Votre demande de participation a été annulée.');
         }
 
         // Supprimer la participation
         $entityManager->remove($participation);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Votre participation a été annulée.');
-
-        return $this->redirectToRoute('app_covoiturage_detail', ['id' => $covoiturage->getId()]);
+        return $this->redirectToRoute('app_espace_utilisateur', ['_fragment' => 'demandes']);
     }
 }

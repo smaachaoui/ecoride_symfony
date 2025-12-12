@@ -6,6 +6,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -41,19 +42,48 @@ class RechercheCovoiturageType extends AbstractType
                     new NotBlank(['message' => 'Veuillez saisir une ville d\'arrivée']),
                 ],
             ])
-            ->add('date', DateType::class, [
-                'label' => 'Date',
+            
+            // Date et heure de départ
+            ->add('date_depart', DateType::class, [
+                'label' => 'Date de départ',
                 'widget' => 'single_text',
                 'attr' => [
                     'class' => 'form-control',
                     'min' => (new \DateTime())->format('Y-m-d'),
                 ],
                 'constraints' => [
-                    new NotBlank(['message' => 'Veuillez saisir une date']),
+                    new NotBlank(['message' => 'Veuillez saisir une date de départ']),
                     new GreaterThanOrEqual([
                         'value' => 'today',
                         'message' => 'La date doit être aujourd\'hui ou ultérieure',
                     ]),
+                ],
+            ])
+            ->add('heure_depart', TimeType::class, [
+                'label' => 'Heure de départ',
+                'widget' => 'single_text',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ])
+            
+            // Date et heure d'arrivée (optionnelles)
+            ->add('date_arrivee', DateType::class, [
+                'label' => 'Date d\'arrivée',
+                'widget' => 'single_text',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'min' => (new \DateTime())->format('Y-m-d'),
+                ],
+            ])
+            ->add('heure_arrivee', TimeType::class, [
+                'label' => 'Heure d\'arrivée',
+                'widget' => 'single_text',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
                 ],
             ])
             

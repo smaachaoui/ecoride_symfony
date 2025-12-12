@@ -8,13 +8,15 @@ use App\Repository\VehiculeRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Positive;
@@ -53,19 +55,54 @@ class CreerCovoiturageType extends AbstractType
                     new NotBlank(['message' => 'Veuillez saisir une ville d\'arrivée']),
                 ],
             ])
-            ->add('date_depart', DateTimeType::class, [
-                'label' => 'Date et heure de départ',
+            // Date de départ
+            ->add('date_depart_jour', DateType::class, [
+                'label' => 'Date de départ',
                 'widget' => 'single_text',
+                'mapped' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'min' => (new \DateTime('+1 hour'))->format('Y-m-d\TH:i'),
+                    'min' => (new \DateTime())->format('Y-m-d'),
                 ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez saisir une date de départ']),
-                    new GreaterThan([
-                        'value' => 'now',
-                        'message' => 'La date de départ doit être dans le futur',
-                    ]),
+                ],
+            ])
+            // Heure de départ
+            ->add('heure_depart', TimeType::class, [
+                'label' => 'Heure de départ',
+                'widget' => 'single_text',
+                'mapped' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir une heure de départ']),
+                ],
+            ])
+            // Date d'arrivée
+            ->add('date_arrivee_jour', DateType::class, [
+                'label' => 'Date d\'arrivée',
+                'widget' => 'single_text',
+                'mapped' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'min' => (new \DateTime())->format('Y-m-d'),
+                ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir une date d\'arrivée']),
+                ],
+            ])
+            // Heure d'arrivée
+            ->add('heure_arrivee', TimeType::class, [
+                'label' => 'Heure d\'arrivée',
+                'widget' => 'single_text',
+                'mapped' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir une heure d\'arrivée']),
                 ],
             ])
             ->add('prix', IntegerType::class, [
@@ -100,7 +137,11 @@ class CreerCovoiturageType extends AbstractType
                 'class' => Vehicule::class,
                 'label' => 'Véhicule',
                 'choice_label' => function (Vehicule $vehicule) {
-                    return $vehicule->getMarque() . ' ' . $vehicule->getModele() . ' (' . $vehicule->getImmatriculation() . ')';
+                    $label = $vehicule->getMarque() . ' ' . $vehicule->getModele() . ' (' . $vehicule->getImmatriculation() . ')';
+                    if ($vehicule->getEnergie() === 'Electrique' || $vehicule->getEnergie() === 'Hybride') {
+                        $label .= ' 🌱';
+                    }
+                    return $label;
                 },
                 'query_builder' => function (VehiculeRepository $repo) use ($user) {
                     return $repo->createQueryBuilder('v')
@@ -119,9 +160,49 @@ class CreerCovoiturageType extends AbstractType
             ->add('submit', SubmitType::class, [
                 'label' => 'Publier le covoiturage',
                 'attr' => [
-                    'class' => 'btn btn-primary',
+                    'class' => 'btn btn-primary btn-lg w-100',
                 ],
             ]);
+
+        // Pré-remplir les champs date/heure si le covoiturage existe déjà
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+            $covoiturage = $event->getData();
+            $form = $event->getForm();
+
+            if ($covoiturage && $covoiturage->getDateDepart()) {
+                $form->get('date_depart_jour')->setData($covoiturage->getDateDepart());
+                $form->get('heure_depart')->setData($covoiturage->getDateDepart());
+            }
+
+            if ($covoiturage && $covoiturage->getDateArrivee()) {
+                $form->get('date_arrivee_jour')->setData($covoiturage->getDateArrivee());
+                $form->get('heure_arrivee')->setData($covoiturage->getDateArrivee());
+            }
+        });
+
+        // Combiner date et heure avant la soumission
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
+            $covoiturage = $event->getData();
+            $form = $event->getForm();
+
+            // Combiner date et heure de départ
+            $dateDepart = $form->get('date_depart_jour')->getData();
+            $heureDepart = $form->get('heure_depart')->getData();
+
+            if ($dateDepart && $heureDepart) {
+                $dateTimeDepart = new \DateTime($dateDepart->format('Y-m-d') . ' ' . $heureDepart->format('H:i:s'));
+                $covoiturage->setDateDepart($dateTimeDepart);
+            }
+
+            // Combiner date et heure d'arrivée
+            $dateArrivee = $form->get('date_arrivee_jour')->getData();
+            $heureArrivee = $form->get('heure_arrivee')->getData();
+
+            if ($dateArrivee && $heureArrivee) {
+                $dateTimeArrivee = new \DateTime($dateArrivee->format('Y-m-d') . ' ' . $heureArrivee->format('H:i:s'));
+                $covoiturage->setDateArrivee($dateTimeArrivee);
+            }
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void

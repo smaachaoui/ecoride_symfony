@@ -22,7 +22,7 @@ class Participation
     private ?Covoiturage $covoiturage_id = null;
 
     #[ORM\Column]
-    private ?bool $confirme = null;
+    private ?bool $confirme = false;
 
     #[ORM\Column]
     private ?int $credits_utilises = null;

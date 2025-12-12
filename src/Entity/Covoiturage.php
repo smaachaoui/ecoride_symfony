@@ -30,6 +30,9 @@ class Covoiturage
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $date_depart = null;
 
+    #[ORM\Column(type: 'datetime')]
+    private ?\DateTimeInterface $date_arrivee = null;
+
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
     private ?float $prix = null;
 
@@ -110,6 +113,17 @@ class Covoiturage
     public function setDateDepart(\DateTimeInterface $date_depart): static
     {
         $this->date_depart = $date_depart;
+        return $this;
+    }
+
+    public function getDateArrivee(): ?\DateTimeInterface
+    {
+        return $this->date_arrivee;
+    }
+
+    public function setDateArrivee(\DateTimeInterface $date_arrivee): static
+    {
+        $this->date_arrivee = $date_arrivee;
         return $this;
     }
 
